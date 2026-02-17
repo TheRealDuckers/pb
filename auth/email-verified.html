@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Email Verified</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="screen active">
+    <h2>Email Verified</h2>
+    <p>Finishing up…</p>
+    <div class="tick show"></div>
+  </div>
+
+  <script type="module">
+    import { auth } from "./firebase.js";
+    import { applyActionCode } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const params = new URLSearchParams(window.location.search);
+    const oobCode = params.get("oobCode");
+
+    async function finishVerification() {
+      try {
+        await applyActionCode(auth, oobCode);
+
+        setTimeout(() => {
+          window.location.href = "/auth/index.html#verified";
+        }, 1200);
+
+      } catch (err) {
+        alert("Verification link invalid or expired.");
+      }
+    }
+
+    finishVerification();
+  </script>
+
+</body>
+</html>
