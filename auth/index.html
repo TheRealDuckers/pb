@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>PracticeBase Signup</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- SCREEN 1: PB CODE -->
+  <div id="screen-code" class="screen active">
+    <h2>Enter PracticeBase Code</h2>
+    <input id="pb-code" placeholder="PracticeBase Code">
+    <button id="btn-code-next">
+      <span class="btn-text">Next</span>
+      <div class="loader"></div>
+    </button>
+    <p id="error-code"></p>
+  </div>
+
+  <!-- SCREEN 2: SIGNUP -->
+  <div id="screen-signup" class="screen">
+    <h2>Create Account</h2>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button id="btn-signup">
+      <span class="btn-text">Sign Up</span>
+      <div class="loader"></div>
+    </button>
+    <p id="error-signup"></p>
+  </div>
+
+  <!-- SCREEN 3: VERIFY -->
+  <div id="screen-verify" class="screen">
+    <h2>Verify Your Email</h2>
+    <p>We sent a verification link to your email.</p>
+    <div class="tick" id="tick"></div>
+    <button id="btn-check">
+      <span class="btn-text">I Verified My Email</span>
+      <div class="loader"></div>
+    </button>
+    <p id="verify-status"></p>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
