@@ -3,7 +3,7 @@ import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   applyActionCode,
-  onAuthStateChanged
+  signInWithEmailLink
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import {
@@ -16,16 +16,20 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* UTILITIES */
-function startLoading(btn) { btn.classList.add("loading"); }
-function stopLoading(btn) { btn.classList.remove("loading"); }
+function startLoading(btn) { btn?.classList.add("loading"); }
+function stopLoading(btn) { btn?.classList.remove("loading"); }
 
-/* ---------------------- PAGE ROUTING ---------------------- */
-const path = window.location.pathname;
+/* Detect page */
+const page = document.body.dataset.page;
 
-/* ---------------------- PAGE 1: CODE ---------------------- */
-if (path.endsWith("index.html") || path.endsWith("/auth/")) {
+/* ---------------------------------------------------------
+   PAGE 1: SIGNUP FLOW (PB code → email/password)
+--------------------------------------------------------- */
+if (page === "signup") {
+
+  /* PB CODE SCREEN */
   const nextBtn = document.getElementById("btn-next");
-  const errorEl = document.getElementById("error-code");
+  const errorCode = document.getElementById("error-code");
 
   nextBtn.onclick = async () => {
     startLoading(nextBtn);
@@ -39,11 +43,10 @@ if (path.endsWith("index.html") || path.endsWith("/auth/")) {
     );
 
     const snap = await getDocs(q);
-
     stopLoading(nextBtn);
 
     if (snap.empty) {
-      errorEl.textContent = "Invalid PracticeBase code.";
+      errorCode.textContent = "Invalid PracticeBase code.";
       return;
     }
 
@@ -52,13 +55,14 @@ if (path.endsWith("index.html") || path.endsWith("/auth/")) {
     localStorage.setItem("pbId", pb.id);
     localStorage.setItem("pbCode", code);
 
-    // Switch to signup screen
+    // Switch screens
     document.getElementById("screen-code").classList.remove("active");
     document.getElementById("screen-signup").classList.add("active");
   };
 
+  /* SIGNUP SCREEN */
   const signupBtn = document.getElementById("btn-signup");
-  const signupError = document.getElementById("error-signup");
+  const errorSignup = document.getElementById("error-signup");
 
   signupBtn.onclick = async () => {
     startLoading(signupBtn);
@@ -70,19 +74,25 @@ if (path.endsWith("index.html") || path.endsWith("/auth/")) {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await sendEmailVerification(cred.user);
 
-      signupError.style.color = "green";
-      signupError.textContent = "Check your email to verify your account.";
+      // Store email for email-link login
+      localStorage.setItem("signupEmail", email);
+
+      errorSignup.style.color = "green";
+      errorSignup.textContent = "Check your email to verify your account.";
 
     } catch (err) {
-      signupError.textContent = err.message;
+      errorSignup.textContent = err.message;
     }
 
     stopLoading(signupBtn);
   };
 }
 
-/* ---------------------- PAGE 2: EMAIL VERIFIED ---------------------- */
-if (path.endsWith("email-verified.html")) {
+/* ---------------------------------------------------------
+   PAGE 2: EMAIL VERIFIED (username setup)
+--------------------------------------------------------- */
+if (page === "verified") {
+
   const params = new URLSearchParams(window.location.search);
   const oobCode = params.get("oobCode");
 
@@ -109,29 +119,31 @@ if (path.endsWith("email-verified.html")) {
       return;
     }
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) return;
+    const email = localStorage.getItem("signupEmail");
+    const pbId = localStorage.getItem("pbId");
+    const pbCode = localStorage.getItem("pbCode");
 
-      const pbId = localStorage.getItem("pbId");
-      const pbCode = localStorage.getItem("pbCode");
+    try {
+      // Sign user in using the email link
+      await signInWithEmailLink(auth, email, window.location.href);
 
-      try {
-        await setDoc(doc(db, "users", user.uid), {
-          username,
-          practiceBaseId: pbId,
-          practiceBaseCode: pbCode,
-          role: "cast",
-          emailVerified: true,
-          createdAt: new Date().toISOString()
-        });
+      const user = auth.currentUser;
 
-        window.location.href = "/dashboard.html";
+      await setDoc(doc(db, "users", user.uid), {
+        username,
+        practiceBaseId: pbId,
+        practiceBaseCode: pbCode,
+        role: "cast",
+        emailVerified: true,
+        createdAt: new Date().toISOString()
+      });
 
-      } catch (err) {
-        errorEl.textContent = err.message;
-      }
+      window.location.href = "/dashboard.html";
 
-      stopLoading(finishBtn);
-    });
+    } catch (err) {
+      errorEl.textContent = err.message;
+    }
+
+    stopLoading(finishBtn);
   };
 }
