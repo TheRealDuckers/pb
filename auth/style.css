@@ -15,33 +15,28 @@
   --space-3:12px;
   --space-4:16px;
 
-  /* Mobile typography */
   --fs-title: clamp(1.4rem, 4vw, 1.8rem);
   --fs-body: clamp(0.9rem, 3vw, 1rem);
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   font-family: system-ui, sans-serif;
   background: var(--bg);
   margin: 0;
   padding: 0;
-
-  /* Mobile-friendly centering */
   min-height: 100vh;
+
   display: flex;
   justify-content: center;
   align-items: center;
 
   color: var(--text);
   font-size: var(--fs-body);
-  -webkit-font-smoothing: antialiased;
 }
 
-/* SCREEN CONTAINER */
+/* CARD */
 .screen {
   width: 90%;
   max-width: 380px;
@@ -55,7 +50,6 @@ body {
   transform: translateY(20px);
   pointer-events: none;
   transition: opacity .4s ease, transform .4s ease;
-
   position: absolute;
 }
 
@@ -67,7 +61,6 @@ body {
 
 h2 {
   margin-bottom: var(--space-3);
-  font-weight: 600;
   font-size: var(--fs-title);
 }
 
@@ -78,7 +71,6 @@ input {
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: var(--soft);
-  transition: border .2s ease, background .2s ease;
   font-size: var(--fs-body);
 }
 
@@ -88,7 +80,7 @@ input:focus {
   outline: none;
 }
 
-/* BUTTON + LOADER */
+/* BUTTON */
 button {
   width: 100%;
   padding: 14px;
@@ -98,17 +90,17 @@ button {
   border-radius: var(--pill);
   margin-top: var(--space-3);
   cursor: pointer;
-  transition: transform .15s ease, opacity .2s ease;
+  font-size: var(--fs-body);
   position: relative;
   overflow: hidden;
-  font-size: var(--fs-body);
 }
 
 button:hover {
-  transform: translateY(-2px);
   opacity: .9;
+  transform: translateY(-2px);
 }
 
+/* LOADER */
 .loader {
   width: 20px;
   height: 20px;
@@ -116,33 +108,25 @@ button:hover {
   border-top-color: white;
   border-radius: 50%;
   animation: spin .7s linear infinite;
-  margin: 0 auto;
   display: none;
+  margin: 0 auto;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.loading .btn-text {
-  opacity: 0;
-}
+.loading .btn-text { opacity: 0; }
+.loading .loader { display: block; }
 
-.loading .loader {
-  display: block;
-}
-
-/* SUCCESS TICK */
+/* TICK */
 .tick {
   width: 48px;
   height: 48px;
   border-radius: 50%;
   border: 3px solid #4CAF50;
   margin: 14px auto;
-  position: relative;
   opacity: 0;
   transform: scale(0.5);
-  transition: opacity .3s ease, transform .3s ease;
+  transition: .3s ease;
 }
 
 .tick::after {
@@ -162,25 +146,8 @@ button:hover {
   transform: scale(1);
 }
 
-#error, #error-code, #error-signup, #verify-status {
+#error, #error-code, #error-signup {
   color: red;
   min-height: 20px;
   margin-top: var(--space-2);
-  font-size: var(--fs-body);
-}
-
-/* MOBILE TWEAKS */
-@media (max-width: 480px) {
-  .screen {
-    padding: 20px;
-    border-radius: var(--radius-md);
-  }
-
-  button {
-    padding: 12px;
-  }
-
-  input {
-    padding: 12px;
-  }
 }

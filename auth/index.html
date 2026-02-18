@@ -8,10 +8,24 @@
 
 <body>
 
-  <div class="screen active">
-    <h2>Create Your Account</h2>
+  <!-- SCREEN 1: PB CODE -->
+  <div id="screen-code" class="screen active">
+    <h2>Enter PracticeBase Code</h2>
 
     <input id="pb-code" placeholder="PracticeBase Code">
+
+    <button id="btn-next">
+      <span class="btn-text">Next</span>
+      <div class="loader"></div>
+    </button>
+
+    <p id="error-code"></p>
+  </div>
+
+  <!-- SCREEN 2: SIGNUP -->
+  <div id="screen-signup" class="screen">
+    <h2>Create Account</h2>
+
     <input id="email" type="email" placeholder="Email">
     <input id="password" type="password" placeholder="Password">
 
@@ -20,7 +34,7 @@
       <div class="loader"></div>
     </button>
 
-    <p id="error"></p>
+    <p id="error-signup"></p>
   </div>
 
   <script type="module" src="app.js"></script>
