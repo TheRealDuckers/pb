@@ -1,8 +1,8 @@
 import { auth, db } from "./firebase.js";
 import {
-  applyActionCode,
   signInWithEmailLink
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 import {
   doc,
   setDoc
@@ -14,15 +14,8 @@ const oobCode = params.get("oobCode");
 const finishBtn = document.getElementById("btn-finish");
 const errorEl = document.getElementById("error");
 
-async function verifyEmail() {
-  try {
-    await applyActionCode(auth, oobCode);
-  } catch (err) {
-    errorEl.textContent = "Invalid or expired verification link.";
-  }
-}
-
-verifyEmail();
+// ❌ REMOVE applyActionCode()
+// Firebase already verified the email when the user clicked the link.
 
 finishBtn.onclick = async () => {
   finishBtn.classList.add("loading");
@@ -48,6 +41,7 @@ finishBtn.onclick = async () => {
   const pbCode = localStorage.getItem("pbCode");
 
   try {
+    // This signs the user in using the email link
     await signInWithEmailLink(auth, email, window.location.href);
     const user = auth.currentUser;
 
@@ -60,7 +54,7 @@ finishBtn.onclick = async () => {
       createdAt: new Date().toISOString()
     });
 
-    window.location.href = "/dashboard.html";
+    window.location.href = "/cast/";
 
   } catch (err) {
     errorEl.textContent = err.message;

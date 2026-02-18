@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard | PracticeBase</title>
+
+  <link rel="stylesheet" href="admin.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="icon" type="image/x-icon" href="/PracticeBase/img/fav.png">
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">Admin Dashboard</div>
+
+    <div class="nav-item active" data-section="announcements">
+      <i data-lucide="megaphone" class="nav-icon"></i> Announcements
+    </div>
+
+    <div class="nav-item" data-section="schedule">
+      <i data-lucide="calendar" class="nav-icon"></i> Schedule
+    </div>
+
+    <div class="nav-item" data-section="tracks">
+      <i data-lucide="music" class="nav-icon"></i> Tracks
+    </div>
+
+    <div class="nav-item" data-section="videos">
+      <i data-lucide="video" class="nav-icon"></i> Videos
+    </div>
+
+    <div class="nav-item" data-section="settings">
+      <i data-lucide="settings" class="nav-icon"></i> Settings
+    </div>
+
+    <div class="nav-item" data-section="users">
+      <i data-lucide="users" class="nav-icon"></i> Users
+    </div>
+
+    <div class="sidebar-footer">
+      <button id="signOutBtn" class="btn outline full-width">
+        <i data-lucide="log-out" class="nav-icon"></i> Sign out
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- ANNOUNCEMENTS -->
+    <section id="section-announcements" class="card">
+      <h2 class="section-title">Announcements</h2>
+      <form id="announcementForm">
+        <div class="field"><label>Title</label><input id="announcementTitle" required></div>
+        <div class="field"><label>Message</label><textarea id="announcementMessage" required></textarea></div>
+        <button class="btn" type="submit">Save Announcement</button>
+      </form>
+      <div class="list" id="announcementsList"></div>
+    </section>
+
+    <!-- SCHEDULE -->
+    <section id="section-schedule" class="card" style="display:none">
+      <h2 class="section-title">Schedule</h2>
+      <form id="scheduleForm">
+        <div class="field"><label>Title</label><input id="scheduleTitle" required></div>
+        <div class="field"><label>Date</label><input id="scheduleDate" required></div>
+        <div class="field"><label>Time</label><input id="scheduleTime"></div>
+        <div class="field"><label>Who</label><input id="scheduleWho"></div>
+        <div class="field"><label>Extra</label><input id="scheduleExtra"></div>
+        <button class="btn" type="submit">Save Schedule Item</button>
+      </form>
+      <div class="list" id="scheduleList"></div>
+    </section>
+
+    <!-- TRACKS -->
+    <section id="section-tracks" class="card" style="display:none">
+      <h2 class="section-title">Tracks</h2>
+      <form id="trackForm">
+        <div class="field"><label>Title</label><input id="trackTitle" required></div>
+        <div class="field"><label>URL</label><input id="trackUrl" required></div>
+        <button class="btn" type="submit">Save Track</button>
+      </form>
+      <div class="list" id="tracksList"></div>
+    </section>
+
+    <!-- VIDEOS -->
+    <section id="section-videos" class="card" style="display:none">
+      <h2 class="section-title">Videos</h2>
+      <form id="videoForm">
+        <div class="field"><label>Title</label><input id="videoTitle" required></div>
+        <div class="field"><label>URL</label><input id="videoUrl" required></div>
+        <button class="btn" type="submit">Save Video</button>
+      </form>
+      <div class="list" id="videosList"></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="section-settings" class="card" style="display:none">
+      <h2 class="section-title">Settings</h2>
+      <form id="settingsForm">
+        <div class="field"><label>Document ID</label><input id="settingsId"></div>
+        <div class="field"><label>Value</label><input id="settingsValue"></div>
+        <button class="btn" type="submit">Save Setting</button>
+      </form>
+    </section>
+
+    <!-- USERS -->
+    <section id="section-users" class="card" style="display:none">
+      <h2 class="section-title">Users</h2>
+      <button id="refreshUsers" class="btn outline">Refresh Users</button>
+      <div id="usersList" class="list" style="margin-top:16px"></div>
+    </section>
+
+  </div>
+
+  <!-- STATUS BAR -->
+  <div id="status" class="status-bar"></div>
+
+  <script type="module" src="admin.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
