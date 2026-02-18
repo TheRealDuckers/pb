@@ -1,149 +1,81 @@
-import { auth, db } from "./firebase.js";
+import { auth, db } from "/firebase.js";
 import {
   createUserWithEmailAndPassword,
-  sendEmailVerification,
-  applyActionCode,
-  signInWithEmailLink
+  sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
 import {
   collection,
   query,
   where,
-  getDocs,
-  doc,
-  setDoc
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* UTILITIES */
-function startLoading(btn) { btn?.classList.add("loading"); }
-function stopLoading(btn) { btn?.classList.remove("loading"); }
+function startLoading(btn) { btn.classList.add("loading"); }
+function stopLoading(btn) { btn.classList.remove("loading"); }
 
-/* Detect page */
-const page = document.body.dataset.page;
+function switchScreen(fromId, toId) {
+  const from = document.getElementById(fromId);
+  const to = document.getElementById(toId);
 
-/* ---------------------------------------------------------
-   PAGE 1: SIGNUP FLOW (PB code → email/password)
---------------------------------------------------------- */
-if (page === "signup") {
+  from.classList.remove("active");
+  from.classList.add("exit-left");
 
-  /* PB CODE SCREEN */
-  const nextBtn = document.getElementById("btn-next");
-  const errorCode = document.getElementById("error-code");
+  to.classList.add("active");
 
-  nextBtn.onclick = async () => {
-    startLoading(nextBtn);
-
-    const code = document.getElementById("pb-code").value.trim().toUpperCase();
-
-    const q = query(
-      collection(db, "practicebases"),
-      where("code", "==", code),
-      where("active", "==", true)
-    );
-
-    const snap = await getDocs(q);
-    stopLoading(nextBtn);
-
-    if (snap.empty) {
-      errorCode.textContent = "Invalid PracticeBase code.";
-      return;
-    }
-
-    const pb = snap.docs[0];
-
-    localStorage.setItem("pbId", pb.id);
-    localStorage.setItem("pbCode", code);
-
-    // Switch screens
-    document.getElementById("screen-code").classList.remove("active");
-    document.getElementById("screen-signup").classList.add("active");
-  };
-
-  /* SIGNUP SCREEN */
-  const signupBtn = document.getElementById("btn-signup");
-  const errorSignup = document.getElementById("error-signup");
-
-  signupBtn.onclick = async () => {
-    startLoading(signupBtn);
-
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await sendEmailVerification(cred.user);
-
-      // Store email for email-link login
-      localStorage.setItem("signupEmail", email);
-
-      errorSignup.style.color = "green";
-      errorSignup.textContent = "We sent an email to you! Press the link within it to verify your account. If you don't see it, check your junk";
-
-    } catch (err) {
-      errorSignup.textContent = err.message;
-    }
-
-    stopLoading(signupBtn);
-  };
+  setTimeout(() => {
+    from.classList.remove("exit-left");
+  }, 450);
 }
 
-/* ---------------------------------------------------------
-   PAGE 2: EMAIL VERIFIED (username setup)
---------------------------------------------------------- */
-if (page === "verified") {
+/* PB CODE SCREEN */
+document.getElementById("btn-next").onclick = async () => {
+  const btn = document.getElementById("btn-next");
+  startLoading(btn);
 
-  const params = new URLSearchParams(window.location.search);
-  const oobCode = params.get("oobCode");
+  const code = document.getElementById("pb-code").value.trim().toUpperCase();
+  const errorEl = document.getElementById("error-code");
 
-  const finishBtn = document.getElementById("btn-finish");
-  const errorEl = document.getElementById("error");
+  const q = query(
+    collection(db, "practicebases"),
+    where("code", "==", code),
+    where("active", "==", true)
+  );
 
-  async function verifyEmail() {
-    try {
-      await applyActionCode(auth, oobCode);
-    } catch (err) {
-      errorEl.textContent = "Invalid or expired verification link.";
-    }
+  const snap = await getDocs(q);
+  stopLoading(btn);
+
+  if (snap.empty) {
+    errorEl.textContent = "Invalid PracticeBase code.";
+    return;
   }
 
-  verifyEmail();
+  const pb = snap.docs[0];
+  localStorage.setItem("pbId", pb.id);
+  localStorage.setItem("pbCode", code);
 
-  finishBtn.onclick = async () => {
-    startLoading(finishBtn);
+  switchScreen("screen-code", "screen-signup");
+};
 
-    const username = document.getElementById("username").value.trim();
-    if (!username) {
-      errorEl.textContent = "Please enter a username.";
-      stopLoading(finishBtn);
-      return;
-    }
+/* SIGNUP SCREEN */
+document.getElementById("btn-signup").onclick = async () => {
+  const btn = document.getElementById("btn-signup");
+  startLoading(btn);
 
-    const email = localStorage.getItem("signupEmail");
-    const pbId = localStorage.getItem("pbId");
-    const pbCode = localStorage.getItem("pbCode");
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const errorEl = document.getElementById("error-signup");
 
-    try {
-      // Sign user in using the email link
-      await signInWithEmailLink(auth, email, window.location.href);
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(cred.user);
 
-      const user = auth.currentUser;
+    localStorage.setItem("signupEmail", email);
 
-      await setDoc(doc(db, "users", user.uid), {
-        username,
-        practiceBaseId: pbId,
-        practiceBaseCode: pbCode,
-        role: "cast",
-        emailVerified: true,
-        createdAt: new Date().toISOString()
-      });
+    errorEl.style.color = "green";
+    errorEl.textContent = "Check your email to verify your account.";
+  } catch (err) {
+    errorEl.textContent = err.message;
+  }
 
-      window.location.href = "/dashboard.html";
-
-    } catch (err) {
-      errorEl.textContent = err.message;
-    }
-
-    stopLoading(finishBtn);
-  };
-}
+  stopLoading(btn);
+};

@@ -1,9 +1,8 @@
-import { auth, db } from "./firebase.js";
+import { auth, db } from "/firebase.js";
 import {
   applyActionCode,
   signInWithEmailLink
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
 import {
   doc,
   setDoc
@@ -15,7 +14,6 @@ const oobCode = params.get("oobCode");
 const finishBtn = document.getElementById("btn-finish");
 const errorEl = document.getElementById("error");
 
-// 1. Apply the verification code
 async function verifyEmail() {
   try {
     await applyActionCode(auth, oobCode);
@@ -26,7 +24,6 @@ async function verifyEmail() {
 
 verifyEmail();
 
-// 2. Handle Finish button
 finishBtn.onclick = async () => {
   finishBtn.classList.add("loading");
 
@@ -37,17 +34,23 @@ finishBtn.onclick = async () => {
     return;
   }
 
-  const email = localStorage.getItem("signupEmail");
+  let email = localStorage.getItem("signupEmail");
+  if (!email) {
+    email = prompt("Enter the email you used to sign up:");
+    if (!email) {
+      errorEl.textContent = "Email is required.";
+      finishBtn.classList.remove("loading");
+      return;
+    }
+  }
+
   const pbId = localStorage.getItem("pbId");
   const pbCode = localStorage.getItem("pbCode");
 
   try {
-    // 3. Sign the user in using the email link
     await signInWithEmailLink(auth, email, window.location.href);
-
     const user = auth.currentUser;
 
-    // 4. Write user profile to Firestore
     await setDoc(doc(db, "users", user.uid), {
       username,
       practiceBaseId: pbId,
@@ -57,7 +60,6 @@ finishBtn.onclick = async () => {
       createdAt: new Date().toISOString()
     });
 
-    // 5. Redirect to your app
     window.location.href = "/dashboard.html";
 
   } catch (err) {
