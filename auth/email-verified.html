@@ -8,33 +8,84 @@
 
 <body>
 
-  <div class="screen active">
+  <div id="verify-screen" class="screen active">
     <h2>Email Verified</h2>
-    <p>Finishing up…</p>
-    <div class="tick show"></div>
+    <p>Choose a username to finish setting up your account.</p>
+
+    <input id="username" placeholder="Username">
+
+    <button id="btn-finish">
+      <span class="btn-text">Finish Setup</span>
+      <div class="loader"></div>
+    </button>
+
+    <p id="error"></p>
   </div>
 
   <script type="module">
-    import { auth } from "./firebase.js";
-    import { applyActionCode } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { auth, db } from "./firebase.js";
+    import {
+      applyActionCode,
+      signInWithEmailLink,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    import {
+      doc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const params = new URLSearchParams(window.location.search);
     const oobCode = params.get("oobCode");
 
-    async function finishVerification() {
+    const usernameInput = document.getElementById("username");
+    const finishBtn = document.getElementById("btn-finish");
+    const errorEl = document.getElementById("error");
+
+    async function verifyEmail() {
       try {
         await applyActionCode(auth, oobCode);
-
-        setTimeout(() => {
-          window.location.href = "/auth/index.html#verified";
-        }, 1200);
-
       } catch (err) {
-        alert("Verification link invalid or expired.");
+        errorEl.textContent = "Invalid or expired verification link.";
       }
     }
 
-    finishVerification();
+    verifyEmail();
+
+    finishBtn.onclick = async () => {
+      const username = usernameInput.value.trim();
+      if (!username) {
+        errorEl.textContent = "Please enter a username.";
+        return;
+      }
+
+      finishBtn.classList.add("loading");
+
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) return;
+
+        const pbId = localStorage.getItem("pbId");
+        const pbCode = localStorage.getItem("pbCode");
+
+        try {
+          await setDoc(doc(db, "users", user.uid), {
+            username,
+            practiceBaseId: pbId,
+            practiceBaseCode: pbCode,
+            role: "cast",
+            emailVerified: true,
+            createdAt: new Date().toISOString()
+          });
+
+          window.location.href = "/dashboard.html";
+
+        } catch (err) {
+          errorEl.textContent = err.message;
+        }
+
+        finishBtn.classList.remove("loading");
+      });
+    };
   </script>
 
 </body>
