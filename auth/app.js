@@ -78,7 +78,7 @@ if (page === "signup") {
       localStorage.setItem("signupEmail", email);
 
       errorSignup.style.color = "green";
-      errorSignup.textContent = "Check your email to verify your account.";
+      errorSignup.textContent = "We sent an email to you! Press the link within it to verify your account. If you don't see it, check your junk";
 
     } catch (err) {
       errorSignup.textContent = err.message;
