@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Cast Dashboard</title>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Design System -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">Platform</div>
+
+  <div class="nav-item active" data-section="announcements">
+    <i data-lucide="megaphone" class="nav-icon"></i> Announcements
+  </div>
+
+  <div class="nav-item" data-section="schedule">
+    <i data-lucide="calendar" class="nav-icon"></i> Rehearsals
+  </div>
+
+  <div class="nav-item" data-section="tracks">
+    <i data-lucide="music" class="nav-icon"></i> Tracks
+  </div>
+
+  <div class="nav-item" data-section="videos">
+    <i data-lucide="video" class="nav-icon"></i> Videos
+  </div>
+
+  <div class="nav-item" data-section="script">
+    <i data-lucide="file-text" class="nav-icon"></i> Script
+  </div>
+
+  <div class="nav-item" data-section="chat">
+    <i data-lucide="message-circle" class="nav-icon"></i> Chat
+  </div>
+
+  <div style="flex:1"></div>
+
+  <div class="nav-item" id="logoutBtn">
+    <i data-lucide="log-out" class="nav-icon"></i> Sign out
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="main"></div>
+
+<script type="module" src="cast.js"></script>
+<script>
+  lucide.createIcons();
+</script>
+
+</body>
+</html>
