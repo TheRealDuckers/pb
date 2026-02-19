@@ -1,7 +1,7 @@
 import { auth, db } from "./firebase.js";
 import {
-  createUserWithEmailAndPassword,
-  sendEmailVerification
+  sendSignInLinkToEmail,
+  createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   collection,
@@ -19,13 +19,15 @@ function switchScreen(fromId, toId) {
 
   from.classList.remove("active");
   from.classList.add("exit-left");
-
   to.classList.add("active");
 
-  setTimeout(() => {
-    from.classList.remove("exit-left");
-  }, 450);
+  setTimeout(() => from.classList.remove("exit-left"), 450);
 }
+
+const actionCodeSettings = {
+  url: "https://yourdomain.com/auth/email-verified.html",
+  handleCodeInApp: true
+};
 
 /* PB CODE SCREEN */
 document.getElementById("btn-next").onclick = async () => {
@@ -66,13 +68,16 @@ document.getElementById("btn-signup").onclick = async () => {
   const errorEl = document.getElementById("error-signup");
 
   try {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await sendEmailVerification(cred.user);
+    // Create the account
+    await createUserWithEmailAndPassword(auth, email, password);
+
+    // Send email link sign-in (this ALSO verifies email)
+    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
 
     localStorage.setItem("signupEmail", email);
 
     errorEl.style.color = "green";
-    errorEl.textContent = "Check your email to verify your account.";
+    errorEl.textContent = "Check your email to verify and continue.";
   } catch (err) {
     errorEl.textContent = err.message;
   }

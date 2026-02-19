@@ -8,14 +8,8 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const params = new URLSearchParams(window.location.search);
-const oobCode = params.get("oobCode");
-
 const finishBtn = document.getElementById("btn-finish");
 const errorEl = document.getElementById("error");
-
-// ❌ REMOVE applyActionCode()
-// Firebase already verified the email when the user clicked the link.
 
 finishBtn.onclick = async () => {
   finishBtn.classList.add("loading");
@@ -41,7 +35,7 @@ finishBtn.onclick = async () => {
   const pbCode = localStorage.getItem("pbCode");
 
   try {
-    // This signs the user in using the email link
+    // Sign the user in using the email link
     await signInWithEmailLink(auth, email, window.location.href);
     const user = auth.currentUser;
 
