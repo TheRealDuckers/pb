@@ -25,7 +25,7 @@ function switchScreen(fromId, toId) {
 }
 
 const actionCodeSettings = {
-  url: "https://yourdomain.com/auth/email-verified.html",
+  url: "https://app.practicebase.duckers.dev/auth/email-verified",
   handleCodeInApp: true
 };
 
