@@ -1,6 +1,4 @@
-// /super-user/super.js
 import { auth, db } from "../auth/firebase.js";
-
 import {
   onAuthStateChanged,
   signOut
@@ -10,24 +8,27 @@ import {
   collection,
   addDoc,
   updateDoc,
-  deleteDoc,
   doc,
   getDoc,
   getDocs,
   query,
   where,
-  orderBy,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* ============================================================
-   GLOBAL STATE
-============================================================ */
 let currentUser = null;
+const $ = (sel) => document.querySelector(sel);
 
-/* ============================================================
-   AUTH
-============================================================ */
+function showLoader() {
+  $("#main").innerHTML = `<div class="page-loader"></div>`;
+}
+
+function setActive(section) {
+  document.querySelectorAll(".nav-item[data-section]").forEach(i => {
+    i.classList.toggle("active", i.dataset.section === section);
+  });
+}
+
 function initAuth() {
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
@@ -36,7 +37,13 @@ function initAuth() {
     }
 
     const udoc = await getDoc(doc(db, "users", user.uid));
-    if (!udoc.exists() || udoc.data().role !== "super") {
+    if (!udoc.exists()) {
+      window.location.href = "/auth/login.html";
+      return;
+    }
+
+    const data = udoc.data();
+    if (data.role !== "super") {
       window.location.href = "/auth/login.html";
       return;
     }
@@ -46,27 +53,9 @@ function initAuth() {
   });
 }
 
-/* ============================================================
-   HELPERS
-============================================================ */
-const $ = (sel) => document.querySelector(sel);
-
-function showLoader() {
-  $("#main").innerHTML = `<div class="page-loader"></div>`;
-}
-
-function setActive(section) {
-  document.querySelectorAll(".nav-item[data-section]").forEach(item => {
-    item.classList.toggle("active", item.dataset.section === section);
-  });
-}
-
-/* ============================================================
-   DASHBOARD
-============================================================ */
+// DASHBOARD
 async function loadDashboard() {
   showLoader();
-
   const pbCount = (await getDocs(collection(db, "practicebases"))).size;
   const adminCount = (await getDocs(query(collection(db, "users"), where("role", "==", "admin")))).size;
   const userCount = (await getDocs(collection(db, "users"))).size;
@@ -75,7 +64,6 @@ async function loadDashboard() {
     <div class="header-row">
       <h2 class="section-title">Dashboard Overview</h2>
     </div>
-
     <div class="grid">
       <div class="card"><strong>${pbCount}</strong><br>PracticeBases</div>
       <div class="card"><strong>${adminCount}</strong><br>Admins</div>
@@ -84,12 +72,9 @@ async function loadDashboard() {
   `;
 }
 
-/* ============================================================
-   PRACTICEBASES
-============================================================ */
+// PRACTICEBASES
 async function loadPracticeBases() {
   showLoader();
-
   const snap = await getDocs(collection(db, "practicebases"));
 
   $("#main").innerHTML = `
@@ -97,13 +82,11 @@ async function loadPracticeBases() {
       <h2 class="section-title">PracticeBases</h2>
       <button class="btn outline" id="newPB">New PracticeBase</button>
     </div>
-
-    <div id="pbList" class="list"></div>
+    <div class="list" id="pbList"></div>
   `;
 
   const list = $("#pbList");
-
-  snap.forEach((d) => {
+  snap.forEach(d => {
     const x = d.data();
     list.innerHTML += `
       <div class="list-item">
@@ -111,7 +94,7 @@ async function loadPracticeBases() {
           <strong>${x.name}</strong><br>
           <div class="small">Code: ${x.code}</div>
         </div>
-        <button class="btn outline" onclick="editPB('${d.id}')">Edit</button>
+        <button class="btn outline small" onclick="editPB('${d.id}')">Edit</button>
       </div>
     `;
   });
@@ -119,12 +102,10 @@ async function loadPracticeBases() {
   $("#newPB").onclick = () => showPBForm();
 }
 
-window.editPB = async function (id) {
+window.editPB = async (id) => {
   const snap = await getDoc(doc(db, "practicebases", id));
   if (!snap.exists()) return;
-
-  const x = snap.data();
-  showPBForm(id, x);
+  showPBForm(id, snap.data());
 };
 
 function showPBForm(id = null, data = {}) {
@@ -132,18 +113,9 @@ function showPBForm(id = null, data = {}) {
     <div class="header-row">
       <h2 class="section-title">${id ? "Edit" : "New"} PracticeBase</h2>
     </div>
-
     <div class="card">
-      <div class="field">
-        <label>Name</label>
-        <input id="pbName" value="${data.name || ""}">
-      </div>
-
-      <div class="field">
-        <label>Code</label>
-        <input id="pbCode" value="${data.code || ""}">
-      </div>
-
+      <div class="field"><label>Name</label><input id="pbName" value="${data.name || ""}"></div>
+      <div class="field"><label>Code</label><input id="pbCode" value="${data.code || ""}"></div>
       <button class="btn" id="savePB">Save</button>
     </div>
   `;
@@ -151,7 +123,6 @@ function showPBForm(id = null, data = {}) {
   $("#savePB").onclick = async () => {
     const name = $("#pbName").value.trim();
     const code = $("#pbCode").value.trim().toUpperCase();
-
     if (!name || !code) return;
 
     const payload = {
@@ -166,30 +137,24 @@ function showPBForm(id = null, data = {}) {
     } else {
       await addDoc(collection(db, "practicebases"), payload);
     }
-
     loadPracticeBases();
   };
 }
 
-/* ============================================================
-   ADMINS
-============================================================ */
+// ADMINS
 async function loadAdmins() {
   showLoader();
-
   const snap = await getDocs(query(collection(db, "users"), where("role", "==", "admin")));
 
   $("#main").innerHTML = `
     <div class="header-row">
       <h2 class="section-title">Admins</h2>
     </div>
-
-    <div id="adminList" class="list"></div>
+    <div class="list" id="adminList"></div>
   `;
 
   const list = $("#adminList");
-
-  snap.forEach((d) => {
+  snap.forEach(d => {
     const x = d.data();
     list.innerHTML += `
       <div class="list-item">
@@ -198,31 +163,24 @@ async function loadAdmins() {
           <div class="small">${x.email}</div>
           <div class="small">PB: ${x.practiceBaseId}</div>
         </div>
-        <button class="btn outline" onclick="editAdmin('${d.id}')">Edit</button>
+        <button class="btn outline small" onclick="editAdmin('${d.id}')">Edit</button>
       </div>
     `;
   });
 }
 
-window.editAdmin = async function (id) {
+window.editAdmin = async (id) => {
   const snap = await getDoc(doc(db, "users", id));
   if (!snap.exists()) return;
-
   const x = snap.data();
-
   const pbs = await getDocs(collection(db, "practicebases"));
 
   $("#main").innerHTML = `
     <div class="header-row">
       <h2 class="section-title">Edit Admin</h2>
     </div>
-
     <div class="card">
-      <div class="field">
-        <label>Email</label>
-        <input value="${x.email}" disabled>
-      </div>
-
+      <div class="field"><label>Email</label><input value="${x.email}" disabled></div>
       <div class="field">
         <label>PracticeBase</label>
         <select id="adminPB">
@@ -233,40 +191,33 @@ window.editAdmin = async function (id) {
           `).join("")}
         </select>
       </div>
-
       <button class="btn" id="saveAdmin">Save</button>
     </div>
   `;
 
   $("#saveAdmin").onclick = async () => {
-    const pb = $("#adminPB").value;
     await updateDoc(doc(db, "users", id), {
-      practiceBaseId: pb,
+      practiceBaseId: $("#adminPB").value,
       role: "admin"
     });
     loadAdmins();
   };
 };
 
-/* ============================================================
-   USERS
-============================================================ */
+// USERS
 async function loadUsers() {
   showLoader();
-
   const snap = await getDocs(collection(db, "users"));
 
   $("#main").innerHTML = `
     <div class="header-row">
       <h2 class="section-title">Users</h2>
     </div>
-
-    <div id="userList" class="list"></div>
+    <div class="list" id="userList"></div>
   `;
 
   const list = $("#userList");
-
-  snap.forEach((d) => {
+  snap.forEach(d => {
     const x = d.data();
     list.innerHTML += `
       <div class="list-item">
@@ -276,16 +227,15 @@ async function loadUsers() {
           <div class="small">Role: ${x.role}</div>
           <div class="small">PB: ${x.practiceBaseId}</div>
         </div>
-        <button class="btn outline" onclick="editUser('${d.id}')">Edit</button>
+        <button class="btn outline small" onclick="editUser('${d.id}')">Edit</button>
       </div>
     `;
   });
 }
 
-window.editUser = async function (id) {
+window.editUser = async (id) => {
   const snap = await getDoc(doc(db, "users", id));
   if (!snap.exists()) return;
-
   const x = snap.data();
   const pbs = await getDocs(collection(db, "practicebases"));
 
@@ -293,25 +243,21 @@ window.editUser = async function (id) {
     <div class="header-row">
       <h2 class="section-title">Edit User</h2>
     </div>
-
     <div class="card">
-      <div class="field">
-        <label>Email</label>
-        <input value="${x.email}" disabled>
-      </div>
-
+      <div class="field"><label>Email</label><input value="${x.email}" disabled></div>
       <div class="field">
         <label>Role</label>
         <select id="userRole">
           <option value="cast" ${x.role === "cast" ? "selected" : ""}>Cast</option>
           <option value="admin" ${x.role === "admin" ? "selected" : ""}>Admin</option>
           <option value="blocked" ${x.role === "blocked" ? "selected" : ""}>Blocked</option>
+          <option value="super" ${x.role === "super" ? "selected" : ""}>Super</option>
         </select>
       </div>
-
       <div class="field">
         <label>PracticeBase</label>
         <select id="userPB">
+          <option value="">None</option>
           ${pbs.docs.map(pb => `
             <option value="${pb.id}" ${pb.id === x.practiceBaseId ? "selected" : ""}>
               ${pb.data().name}
@@ -319,7 +265,6 @@ window.editUser = async function (id) {
           `).join("")}
         </select>
       </div>
-
       <button class="btn" id="saveUser">Save</button>
     </div>
   `;
@@ -327,21 +272,17 @@ window.editUser = async function (id) {
   $("#saveUser").onclick = async () => {
     await updateDoc(doc(db, "users", id), {
       role: $("#userRole").value,
-      practiceBaseId: $("#userPB").value
+      practiceBaseId: $("#userPB").value || null
     });
     loadUsers();
   };
 };
 
-/* ============================================================
-   NAVIGATION
-============================================================ */
 function startUI() {
   document.querySelectorAll(".nav-item[data-section]").forEach(item => {
     item.addEventListener("click", () => {
       const s = item.dataset.section;
       setActive(s);
-
       if (s === "dashboard") loadDashboard();
       if (s === "practicebases") loadPracticeBases();
       if (s === "admins") loadAdmins();
@@ -349,15 +290,13 @@ function startUI() {
     });
   });
 
-  $("#logoutBtn").onclick = async () => {
+  document.getElementById("logoutBtn").onclick = async () => {
     await signOut(auth);
     window.location.href = "/auth/login.html";
   };
 
+  setActive("dashboard");
   loadDashboard();
 }
 
-/* ============================================================
-   START
-============================================================ */
 initAuth();
