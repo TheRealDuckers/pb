@@ -1,86 +1,79 @@
 import { auth, db } from "./firebase.js";
 import {
-  sendSignInLinkToEmail,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  sendSignInLinkToEmail
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 import {
   collection,
   query,
   where,
-  getDocs
+  getDocs,
+  doc,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-function startLoading(btn) { btn.classList.add("loading"); }
-function stopLoading(btn) { btn.classList.remove("loading"); }
-
-function switchScreen(fromId, toId) {
-  const from = document.getElementById(fromId);
-  const to = document.getElementById(toId);
-
-  from.classList.remove("active");
-  from.classList.add("exit-left");
-  to.classList.add("active");
-
-  setTimeout(() => from.classList.remove("exit-left"), 450);
-}
-
 const actionCodeSettings = {
-  url: "https://app.practicebase.duckers.dev/auth/email-verified",
+  url: "https://practicebase.github.io/PracticeBase/auth/verify.html",
   handleCodeInApp: true
 };
 
-/* PB CODE SCREEN */
-document.getElementById("btn-next").onclick = async () => {
-  const btn = document.getElementById("btn-next");
-  startLoading(btn);
+document.getElementById("btn-signup").onclick = async () => {
+  const pbCode = document.getElementById("pb-code").value.trim().toUpperCase();
+  const username = document.getElementById("username").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const errorEl = document.getElementById("error-signup");
 
-  const code = document.getElementById("pb-code").value.trim().toUpperCase();
-  const errorEl = document.getElementById("error-code");
+  errorEl.textContent = "";
 
+  if (!pbCode || !username || !email || !password) {
+    errorEl.textContent = "Please fill out all fields.";
+    return;
+  }
+
+  // Validate PB code
   const q = query(
     collection(db, "practicebases"),
-    where("code", "==", code),
+    where("code", "==", pbCode),
     where("active", "==", true)
   );
 
   const snap = await getDocs(q);
-  stopLoading(btn);
-
   if (snap.empty) {
     errorEl.textContent = "Invalid PracticeBase code.";
     return;
   }
 
-  const pb = snap.docs[0];
-  localStorage.setItem("pbId", pb.id);
-  localStorage.setItem("pbCode", code);
-
-  switchScreen("screen-code", "screen-signup");
-};
-
-/* SIGNUP SCREEN */
-document.getElementById("btn-signup").onclick = async () => {
-  const btn = document.getElementById("btn-signup");
-  startLoading(btn);
-
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const errorEl = document.getElementById("error-signup");
+  const pbDoc = snap.docs[0];
+  const pbId = pbDoc.id;
 
   try {
-    // Create the account
-    await createUserWithEmailAndPassword(auth, email, password);
+    // Create Firebase user
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const user = cred.user;
 
-    // Send email link sign-in (this ALSO verifies email)
+    // Create Firestore user doc
+    await setDoc(doc(db, "users", user.uid), {
+      username,
+      email,
+      role: "cast",
+      practiceBaseId: pbId,
+      practiceBaseCode: pbCode,
+      emailVerified: false,
+      createdAt: new Date().toISOString()
+    });
+
+    // Send email verification link
     await sendSignInLinkToEmail(auth, email, actionCodeSettings);
 
+    // Save email for verify step
     localStorage.setItem("signupEmail", email);
 
     errorEl.style.color = "green";
-    errorEl.textContent = "Check your email to verify and continue.";
+    errorEl.textContent = "Account created! Check your email to verify.";
+
   } catch (err) {
     errorEl.textContent = err.message;
   }
-
-  stopLoading(btn);
 };
