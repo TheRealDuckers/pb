@@ -1,3 +1,4 @@
+// /admin/admin.js
 import { auth, db } from "../auth/firebase.js";
 import {
   onAuthStateChanged,
@@ -21,10 +22,10 @@ import {
 let currentUser = null;
 let currentPB = null;
 
-const $ = (id) => document.getElementById(id);
+const $ = (sel) => document.querySelector(sel);
 
 function showLoader() {
-  $("main").innerHTML = `<div class="page-loader"></div>`;
+  $("#main").innerHTML = `<div class="page-loader"></div>`;
 }
 
 function setActive(section) {
@@ -48,8 +49,9 @@ function initAuth() {
 
     const data = udoc.data();
     if (data.role !== "admin") {
-      // admins only
-      window.location.href = "/cast/";
+      // if super, send to super-user; if cast, send to cast
+      if (data.role === "super") window.location.href = "/super-user/";
+      else window.location.href = "/cast/";
       return;
     }
 
@@ -75,7 +77,7 @@ async function loadAnnouncements() {
   );
   const snap = await getDocs(q);
 
-  $("main").innerHTML = `
+  $("#main").innerHTML = `
     <div class="header-row">
       <h2 class="section-title">Announcements</h2>
     </div>
@@ -95,7 +97,7 @@ async function loadAnnouncements() {
     <div class="list" id="annList"></div>
   `;
 
-  const list = $("annList");
+  const list = $("#annList");
   snap.forEach(d => {
     const x = d.data();
     list.innerHTML += `
@@ -112,10 +114,10 @@ async function loadAnnouncements() {
     `;
   });
 
-  $("announcementForm").onsubmit = async (e) => {
+  $("#announcementForm").onsubmit = async (e) => {
     e.preventDefault();
-    const title = $("announcementTitle").value.trim();
-    const message = $("announcementMessage").value.trim();
+    const title = $("#announcementTitle").value.trim();
+    const message = $("#announcementMessage").value.trim();
     if (!title && !message) return;
 
     const payload = {
@@ -139,8 +141,8 @@ window.editAnnouncement = async (id) => {
   const snap = await getDoc(doc(db, "announcements", id));
   if (!snap.exists()) return;
   const x = snap.data();
-  $("announcementTitle").value = x.title;
-  $("announcementMessage").value = x.message;
+  $("#announcementTitle").value = x.title;
+  $("#announcementMessage").value = x.message;
   window.editingAnnouncementId = id;
 };
 
@@ -149,7 +151,7 @@ window.deleteAnnouncement = async (id) => {
   loadAnnouncements();
 };
 
-// SCHEDULE (similar pattern)
+// SCHEDULE
 async function loadSchedule() {
   showLoader();
   const q = query(
@@ -159,7 +161,7 @@ async function loadSchedule() {
   );
   const snap = await getDocs(q);
 
-  $("main").innerHTML = `
+  $("#main").innerHTML = `
     <div class="header-row">
       <h2 class="section-title">Rehearsals</h2>
     </div>
@@ -176,7 +178,7 @@ async function loadSchedule() {
     <div class="list" id="schedList"></div>
   `;
 
-  const list = $("schedList");
+  const list = $("#schedList");
   snap.forEach(d => {
     const x = d.data();
     list.innerHTML += `
@@ -194,13 +196,13 @@ async function loadSchedule() {
     `;
   });
 
-  $("scheduleForm").onsubmit = async (e) => {
+  $("#scheduleForm").onsubmit = async (e) => {
     e.preventDefault();
-    const title = $("scheduleTitle").value.trim();
-    const date = $("scheduleDate").value.trim();
-    const time = $("scheduleTime").value.trim();
-    const who = $("scheduleWho").value.trim();
-    const extra = $("scheduleExtra").value.trim();
+    const title = $("#scheduleTitle").value.trim();
+    const date = $("#scheduleDate").value.trim();
+    const time = $("#scheduleTime").value.trim();
+    const who = $("#scheduleWho").value.trim();
+    const extra = $("#scheduleExtra").value.trim();
 
     const payload = {
       title,
@@ -227,11 +229,11 @@ window.editSchedule = async (id) => {
   const snap = await getDoc(doc(db, "schedule", id));
   if (!snap.exists()) return;
   const x = snap.data();
-  $("scheduleTitle").value = x.title;
-  $("scheduleDate").value = x.date;
-  $("scheduleTime").value = x.time;
-  $("scheduleWho").value = x.who;
-  $("scheduleExtra").value = x.extra || "";
+  $("#scheduleTitle").value = x.title;
+  $("#scheduleDate").value = x.date;
+  $("#scheduleTime").value = x.time;
+  $("#scheduleWho").value = x.who;
+  $("#scheduleExtra").value = x.extra || "";
   window.editingScheduleId = id;
 };
 
@@ -240,8 +242,6 @@ window.deleteSchedule = async (id) => {
   loadSchedule();
 };
 
-// TRACKS + VIDEOS can follow same pattern as earlier cast.js but with create/update/delete
-
 function startUI() {
   document.querySelectorAll(".nav-item[data-section]").forEach(item => {
     item.addEventListener("click", () => {
@@ -249,11 +249,10 @@ function startUI() {
       setActive(s);
       if (s === "announcements") loadAnnouncements();
       if (s === "schedule") loadSchedule();
-      // add tracks/videos if you wire them
     });
   });
 
-  document.getElementById("logoutBtn").onclick = async () => {
+  $("#logoutBtn").onclick = async () => {
     await signOut(auth);
     window.location.href = "/auth/login.html";
   };

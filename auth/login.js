@@ -1,3 +1,4 @@
+// /auth/login.js
 import { auth, db } from "./firebase.js";
 import {
   signInWithEmailAndPassword
@@ -16,9 +17,11 @@ document.getElementById("btn-login").onclick = async () => {
   errorEl.textContent = "";
 
   try {
+    // Sign in
     const cred = await signInWithEmailAndPassword(auth, email, password);
     const user = cred.user;
 
+    // Load user doc
     const snap = await getDoc(doc(db, "users", user.uid));
     if (!snap.exists()) {
       errorEl.textContent = "User record missing.";
@@ -27,14 +30,25 @@ document.getElementById("btn-login").onclick = async () => {
 
     const data = snap.data();
 
+    // Email verification check
     if (!data.emailVerified) {
       errorEl.textContent = "Please verify your email first.";
       return;
     }
 
-    if (data.role === "super") window.location.href = "/super-user/";
-    else if (data.role === "admin") window.location.href = "/admin/";
-    else window.location.href = "/cast/";
+    // Role-based redirect
+    if (data.role === "super") {
+      window.location.href = "/super-user/";
+      return;
+    }
+
+    if (data.role === "admin") {
+      window.location.href = "/admin/";
+      return;
+    }
+
+    // Default: cast
+    window.location.href = "/cast/";
 
   } catch (err) {
     errorEl.textContent = err.message;

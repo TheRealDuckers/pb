@@ -1,3 +1,4 @@
+// /cast/cast.js
 import { auth, db } from "../auth/firebase.js";
 import {
   onAuthStateChanged,
@@ -9,16 +10,18 @@ import {
   getDocs,
   query,
   where,
-  orderBy
+  orderBy,
+  doc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let currentUser = null;
 let currentPB = null;
 
-const $ = (id) => document.getElementById(id);
+const $ = (sel) => document.querySelector(sel);
 
 function showLoader() {
-  $("main").innerHTML = `<div class="page-loader"></div>`;
+  $("#main").innerHTML = `<div class="page-loader"></div>`;
 }
 
 function setActive(section) {
@@ -34,16 +37,17 @@ function initAuth() {
       return;
     }
 
-    const snap = await getDocs(
-      query(collection(db, "users"), where("__name__", "==", user.uid))
-    );
-    if (snap.empty) {
+    // Load user doc
+    const udoc = await getDoc(doc(db, "users", user.uid));
+    if (!udoc.exists()) {
       window.location.href = "/auth/login.html";
       return;
     }
 
-    const data = snap.docs[0].data();
-    if (data.role !== "cast" && data.role !== "admin" && data.role !== "super") {
+    const data = udoc.data();
+
+    // Allowed roles for cast dashboard
+    if (!["cast", "admin", "super"].includes(data.role)) {
       window.location.href = "/auth/login.html";
       return;
     }
@@ -51,6 +55,7 @@ function initAuth() {
     currentUser = user;
     currentPB = data.practiceBaseId || null;
 
+    // Cast MUST have a PB
     if (!currentPB && data.role === "cast") {
       window.location.href = "/auth/login.html";
       return;
@@ -70,14 +75,14 @@ async function loadAnnouncements() {
   );
   const snap = await getDocs(q);
 
-  $("main").innerHTML = `
+  $("#main").innerHTML = `
     <div class="header-row">
       <h2 class="section-title">Announcements</h2>
     </div>
     <div class="list" id="annList"></div>
   `;
 
-  const list = $("annList");
+  const list = $("#annList");
   snap.forEach(d => {
     const x = d.data();
     list.innerHTML += `
@@ -101,14 +106,14 @@ async function loadSchedule() {
   );
   const snap = await getDocs(q);
 
-  $("main").innerHTML = `
+  $("#main").innerHTML = `
     <div class="header-row">
       <h2 class="section-title">Rehearsals</h2>
     </div>
     <div class="list" id="schedList"></div>
   `;
 
-  const list = $("schedList");
+  const list = $("#schedList");
   snap.forEach(d => {
     const x = d.data();
     list.innerHTML += `
@@ -133,14 +138,14 @@ async function loadTracks() {
   );
   const snap = await getDocs(q);
 
-  $("main").innerHTML = `
+  $("#main").innerHTML = `
     <div class="header-row">
       <h2 class="section-title">Tracks</h2>
     </div>
     <div class="list" id="tracksList"></div>
   `;
 
-  const list = $("tracksList");
+  const list = $("#tracksList");
   snap.forEach(d => {
     const x = d.data();
     list.innerHTML += `
@@ -162,14 +167,14 @@ async function loadVideos() {
   );
   const snap = await getDocs(q);
 
-  $("main").innerHTML = `
+  $("#main").innerHTML = `
     <div class="header-row">
       <h2 class="section-title">Videos</h2>
     </div>
     <div class="list" id="videosList"></div>
   `;
 
-  const list = $("videosList");
+  const list = $("#videosList");
   snap.forEach(d => {
     const x = d.data();
     list.innerHTML += `
@@ -193,7 +198,7 @@ function startUI() {
     });
   });
 
-  document.getElementById("logoutBtn").onclick = async () => {
+  $("#logoutBtn").onclick = async () => {
     await signOut(auth);
     window.location.href = "/auth/login.html";
   };

@@ -1,3 +1,4 @@
+// /super-user/super.js
 import { auth, db } from "../auth/firebase.js";
 import {
   onAuthStateChanged,
@@ -44,7 +45,9 @@ function initAuth() {
 
     const data = udoc.data();
     if (data.role !== "super") {
-      window.location.href = "/auth/login.html";
+      // if admin, send to admin; if cast, send to cast
+      if (data.role === "admin") window.location.href = "/admin/";
+      else window.location.href = "/cast/";
       return;
     }
 
@@ -290,7 +293,7 @@ function startUI() {
     });
   });
 
-  document.getElementById("logoutBtn").onclick = async () => {
+  $("#logoutBtn").onclick = async () => {
     await signOut(auth);
     window.location.href = "/auth/login.html";
   };
