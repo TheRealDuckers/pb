@@ -1,13 +1,31 @@
 // /auth/login.js
 import { auth, db } from "./firebase.js";
 import {
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import {
   doc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// If already logged in, route immediately
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
+
+  const snap = await getDoc(doc(db, "users", user.uid));
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  routeByRole(data.role);
+});
+
+function routeByRole(role) {
+  if (role === "super") window.location.href = "/super-user/";
+  else if (role === "admin") window.location.href = "/admin/";
+  else window.location.href = "/cast/";
+}
 
 document.getElementById("btn-login").onclick = async () => {
   const email = document.getElementById("email").value.trim();
@@ -17,11 +35,9 @@ document.getElementById("btn-login").onclick = async () => {
   errorEl.textContent = "";
 
   try {
-    // Sign in
     const cred = await signInWithEmailAndPassword(auth, email, password);
     const user = cred.user;
 
-    // Load user doc
     const snap = await getDoc(doc(db, "users", user.uid));
     if (!snap.exists()) {
       errorEl.textContent = "User record missing.";
@@ -29,27 +45,12 @@ document.getElementById("btn-login").onclick = async () => {
     }
 
     const data = snap.data();
-
-    // Email verification check
     if (!data.emailVerified) {
       errorEl.textContent = "Please verify your email first.";
       return;
     }
 
-    // Role-based redirect
-    if (data.role === "super") {
-      window.location.href = "/super-user/";
-      return;
-    }
-
-    if (data.role === "admin") {
-      window.location.href = "/admin/";
-      return;
-    }
-
-    // Default: cast
-    window.location.href = "/cast/";
-
+    routeByRole(data.role);
   } catch (err) {
     errorEl.textContent = err.message;
   }

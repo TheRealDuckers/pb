@@ -15,19 +15,11 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-let currentUser = null;
 let currentPB = null;
-
 const $ = (sel) => document.querySelector(sel);
 
 function showLoader() {
-  $("#main").innerHTML = `<div class="page-loader"></div>`;
-}
-
-function setActive(section) {
-  document.querySelectorAll(".nav-item[data-section]").forEach(i => {
-    i.classList.toggle("active", i.dataset.section === section);
-  });
+  $("#main").innerHTML = `<div>Loading...</div>`;
 }
 
 function initAuth() {
@@ -37,7 +29,6 @@ function initAuth() {
       return;
     }
 
-    // Load user doc
     const udoc = await getDoc(doc(db, "users", user.uid));
     if (!udoc.exists()) {
       window.location.href = "/auth/login.html";
@@ -46,26 +37,24 @@ function initAuth() {
 
     const data = udoc.data();
 
-    // Allowed roles for cast dashboard
+    // Only allow cast/admin/super to see cast dashboard
     if (!["cast", "admin", "super"].includes(data.role)) {
       window.location.href = "/auth/login.html";
       return;
     }
 
-    currentUser = user;
     currentPB = data.practiceBaseId || null;
 
-    // Cast MUST have a PB
+    // Cast must have a PB; admin/super can have null
     if (!currentPB && data.role === "cast") {
       window.location.href = "/auth/login.html";
       return;
     }
 
-    startUI();
+    setupUI();
   });
 }
 
-// ANNOUNCEMENTS
 async function loadAnnouncements() {
   showLoader();
   const q = query(
@@ -75,28 +64,20 @@ async function loadAnnouncements() {
   );
   const snap = await getDocs(q);
 
-  $("#main").innerHTML = `
-    <div class="header-row">
-      <h2 class="section-title">Announcements</h2>
-    </div>
-    <div class="list" id="annList"></div>
-  `;
-
+  $("#main").innerHTML = `<h2>Announcements</h2><div id="annList"></div>`;
   const list = $("#annList");
+
   snap.forEach(d => {
     const x = d.data();
     list.innerHTML += `
-      <div class="list-item">
-        <div>
-          <strong>${x.title}</strong><br>
-          <div>${x.message}</div>
-        </div>
+      <div>
+        <strong>${x.title}</strong><br>
+        <span>${x.message}</span>
       </div>
     `;
   });
 }
 
-// SCHEDULE
 async function loadSchedule() {
   showLoader();
   const q = query(
@@ -106,104 +87,29 @@ async function loadSchedule() {
   );
   const snap = await getDocs(q);
 
-  $("#main").innerHTML = `
-    <div class="header-row">
-      <h2 class="section-title">Rehearsals</h2>
-    </div>
-    <div class="list" id="schedList"></div>
-  `;
+  $("#main").innerHTML = `<h2>Rehearsals</h2><div id="schedList"></div>`;
+  const list = $("#schedList";
 
-  const list = $("#schedList");
   snap.forEach(d => {
     const x = d.data();
     list.innerHTML += `
-      <div class="list-item">
-        <div>
-          <strong>${x.title}</strong><br>
-          <div>${x.date} • ${x.time} • ${x.who}</div>
-          ${x.extra ? `<div>${x.extra}</div>` : ""}
-        </div>
+      <div>
+        <strong>${x.title}</strong><br>
+        <span>${x.date} • ${x.time} • ${x.who}</span>
       </div>
     `;
   });
 }
 
-// TRACKS
-async function loadTracks() {
-  showLoader();
-  const q = query(
-    collection(db, "tracks"),
-    where("practiceBaseId", "==", currentPB),
-    orderBy("createdAt", "desc")
-  );
-  const snap = await getDocs(q);
+function setupUI() {
+  document.getElementById("nav-ann").onclick = loadAnnouncements;
+  document.getElementById("nav-sched").onclick = loadSchedule;
 
-  $("#main").innerHTML = `
-    <div class="header-row">
-      <h2 class="section-title">Tracks</h2>
-    </div>
-    <div class="list" id="tracksList"></div>
-  `;
-
-  const list = $("#tracksList");
-  snap.forEach(d => {
-    const x = d.data();
-    list.innerHTML += `
-      <div class="list-item">
-        <div><strong>${x.title}</strong></div>
-        <a class="btn outline small" href="${x.url}" target="_blank">Open</a>
-      </div>
-    `;
-  });
-}
-
-// VIDEOS
-async function loadVideos() {
-  showLoader();
-  const q = query(
-    collection(db, "videos"),
-    where("practiceBaseId", "==", currentPB),
-    orderBy("createdAt", "desc")
-  );
-  const snap = await getDocs(q);
-
-  $("#main").innerHTML = `
-    <div class="header-row">
-      <h2 class="section-title">Videos</h2>
-    </div>
-    <div class="list" id="videosList"></div>
-  `;
-
-  const list = $("#videosList");
-  snap.forEach(d => {
-    const x = d.data();
-    list.innerHTML += `
-      <div class="list-item">
-        <div><strong>${x.title}</strong></div>
-        <a class="btn outline small" href="${x.url}" target="_blank">Open</a>
-      </div>
-    `;
-  });
-}
-
-function startUI() {
-  document.querySelectorAll(".nav-item[data-section]").forEach(item => {
-    item.addEventListener("click", () => {
-      const s = item.dataset.section;
-      setActive(s);
-      if (s === "announcements") loadAnnouncements();
-      if (s === "schedule") loadSchedule();
-      if (s === "tracks") loadTracks();
-      if (s === "videos") loadVideos();
-    });
-  });
-
-  $("#logoutBtn").onclick = async () => {
+  document.getElementById("logoutBtn").onclick = async () => {
     await signOut(auth);
     window.location.href = "/auth/login.html";
   };
 
-  setActive("announcements");
   loadAnnouncements();
 }
 
