@@ -88,7 +88,7 @@ async function loadSchedule() {
   const snap = await getDocs(q);
 
   $("#main").innerHTML = `<h2>Rehearsals</h2><div id="schedList"></div>`;
-  const list = $("#schedList";
+  const list = $("#schedList");
 
   snap.forEach(d => {
     const x = d.data();
