@@ -38,18 +38,40 @@
       <div id="qrOutput"></div>
     </div>
 
-    <!-- LIST PBs -->
+    <!-- PB LIST -->
     <div class="card">
       <h2>All PracticeBases</h2>
-      <div id="pbList">Loading…</div>
+      <div id="pbList" class="list">Loading…</div>
     </div>
 
-    <!-- LIST ADMINS -->
+    <!-- ADMIN LIST -->
     <div class="card">
       <h2>All Admins</h2>
-      <div id="adminList">Loading…</div>
+      <div id="adminList" class="list">Loading…</div>
     </div>
 
+  </div>
+
+  <!-- PB DETAILS MODAL -->
+  <div id="pbModal" class="modal hidden">
+    <div class="modal-content">
+      <h2 id="pbModalTitle"></h2>
+
+      <button id="renamePBBtn" class="secondary">Rename PB</button>
+      <button id="viewUsersBtn" class="secondary">View Users</button>
+      <button id="deletePBBtn" class="danger">Delete PB</button>
+
+      <button id="closePBModal" class="secondary small">Close</button>
+    </div>
+  </div>
+
+  <!-- USERS MODAL -->
+  <div id="usersModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Users in PB</h2>
+      <div id="usersList">Loading…</div>
+      <button id="closeUsersModal" class="secondary small">Close</button>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
