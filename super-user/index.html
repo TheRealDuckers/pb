@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Super User Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="super.css">
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>Super User Dashboard</h1>
+    <p id="suEmail" class="muted"></p>
+
+    <!-- CREATE PB -->
+    <div class="card">
+      <h2>Create PracticeBase</h2>
+      <input id="pbCode" placeholder="PB Code (e.g. GREASE2025)">
+      <input id="pbName" placeholder="PracticeBase Name">
+      <button id="createPBBtn">Create PracticeBase</button>
+    </div>
+
+    <!-- ASSIGN ADMIN -->
+    <div class="card">
+      <h2>Assign Admin to PB</h2>
+      <input id="adminEmail" placeholder="Admin Email">
+      <input id="assignPBCode" placeholder="PB Code">
+      <button id="assignAdminBtn">Assign Admin</button>
+    </div>
+
+    <!-- QR CODE -->
+    <div class="card">
+      <h2>Generate Signup QR</h2>
+      <input id="qrPBCode" placeholder="PB Code">
+      <button id="generateQRBtn">Generate QR Code</button>
+      <div id="qrOutput"></div>
+    </div>
+
+    <!-- LIST PBs -->
+    <div class="card">
+      <h2>All PracticeBases</h2>
+      <div id="pbList">Loading…</div>
+    </div>
+
+    <!-- LIST ADMINS -->
+    <div class="card">
+      <h2>All Admins</h2>
+      <div id="adminList">Loading…</div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script type="module" src="super.js"></script>
+</body>
+</html>
