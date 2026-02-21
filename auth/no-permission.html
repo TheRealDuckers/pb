@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Access Denied • PracticeBase</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="no-permission.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="icon-wrap">
+      <i class="fa-solid fa-lock"></i>
+    </div>
+
+    <h1>Access Denied</h1>
+    <p class="subtitle">You don’t have permission to view this page. If you think this is a mistake, please reach out to your PracticeBase admin.</p>
+
+    <button id="goHomeBtn">Go to Home</button>
+
+  </div>
+
+  <script>
+    document.getElementById("goHomeBtn").addEventListener("click", () => {
+      window.location.href = "/";
+    });
+  </script>
+
+</body>
+</html>
