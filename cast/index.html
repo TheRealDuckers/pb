@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>PracticeBase Cast</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="cast.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+  <header id="header">
+    <div id="pbName">Loading…</div>
+    <div id="userEmail" class="user-email"></div>
+  </header>
+
+  <main id="main">
+
+    <!-- ANNOUNCEMENTS -->
+    <section id="page-announcements" class="page active">
+      <h1>Announcements</h1>
+      <div id="annList" class="list">Loading…</div>
+    </section>
+
+    <!-- SCHEDULE -->
+    <section id="page-schedule" class="page">
+      <h1>Schedule</h1>
+      <div id="schedList" class="list">Loading…</div>
+    </section>
+
+    <!-- MEDIA -->
+    <section id="page-media" class="page">
+      <h1>Media</h1>
+      <div id="mediaList" class="list">Loading…</div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="page-profile" class="page">
+      <h1>Profile</h1>
+      <div class="card">
+        <p><strong>Email:</strong> <span id="profileEmail">Loading…</span></p>
+        <p><strong>PracticeBase:</strong> <span id="profilePB">Loading…</span></p>
+      </div>
+      <button id="logoutBtn" class="logout-btn">Logout</button>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM NAV -->
+  <nav id="bottomNav">
+    <button class="nav-btn active" data-page="announcements">
+      <i class="fa-solid fa-bullhorn"></i>
+      <span>Announcements</span>
+    </button>
+    <button class="nav-btn" data-page="schedule">
+      <i class="fa-solid fa-calendar-days"></i>
+      <span>Schedule</span>
+    </button>
+    <button class="nav-btn" data-page="media">
+      <i class="fa-solid fa-photo-film"></i>
+      <span>Media</span>
+    </button>
+    <button class="nav-btn" data-page="profile">
+      <i class="fa-solid fa-user"></i>
+      <span>Profile</span>
+    </button>
+  </nav>
+
+  <script type="module" src="cast.js"></script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Reset Password • PracticeBase</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="forgot.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="logo">
+      <i class="fa-solid fa-key"></i>
+      <span>Password Reset</span>
+    </div>
+
+    <h1>Forgot Password</h1>
+    <p class="subtitle">Well that was silly wasn't it? Don't worry, if you enter your email and we’ll send a reset link</p>
+
+    <div class="card">
+      <input id="email" type="email" placeholder="Email">
+
+      <button id="resetBtn">Send Reset Link</button>
+
+      <p id="msg" class="msg hidden"></p>
+
+      <p class="back-link">
+        <a href="/auth/login.html">Back to Login</a>
+      </p>
+    </div>
+
+  </div>
+
+  <script type="module" src="forgot.js"></script>
+</body>
+</html>

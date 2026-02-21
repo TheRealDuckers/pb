@@ -2,19 +2,39 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
+  <title>Login • PracticeBase</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="login.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
 
-  <h2>Login</h2>
+  <div class="container">
 
-  <form id="loginForm">
-    <input id="email" type="email" placeholder="Email" required>
-    <input id="password" type="password" placeholder="Password" required>
-    <button type="submit">Login</button>
-  </form>
+    <div class="logo">
+      <i class="fa-solid fa-masks-theater"></i>
+      <span>PracticeBase</span>
+    </div>
+
+    <h1>Welcome Back</h1>
+    <p class="subtitle">Sign in to continue</p>
+
+    <div class="card">
+      <input id="email" type="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Password">
+
+      <button id="loginBtn">Login</button>
+
+      <p id="errorMsg" class="error hidden"></p>
+
+      <p class="signup-link">
+        Don’t have an account?
+        <a href="/auth/signup.html">Sign up</a>
+      </p>
+    </div>
+
+  </div>
 
   <script type="module" src="login.js"></script>
 </body>

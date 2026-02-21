@@ -1,0 +1,141 @@
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+  background: #f5f5f7;
+  color: #111;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+header {
+  padding: 12px 16px;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+#pbName {
+  font-weight: 700;
+}
+
+.user-email {
+  font-size: 0.85rem;
+  color: #666;
+  max-width: 50%;
+  text-align: right;
+  word-break: break-all;
+}
+
+#main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+h1 {
+  margin-top: 0;
+}
+
+.page {
+  display: none;
+}
+
+.page.active {
+  display: block;
+}
+
+.card {
+  background: #fff;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid #ddd;
+  margin-bottom: 16px;
+}
+
+/* LISTS */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list-item {
+  background: #fff;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+}
+
+.list-item-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.list-item-sub {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* BOTTOM NAV */
+
+#bottomNav {
+  display: flex;
+  border-top: 1px solid #ddd;
+  background: #fff;
+}
+
+.nav-btn {
+  flex: 1;
+  padding: 8px 4px;
+  border: none;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  color: #555;
+}
+
+.nav-btn i {
+  font-size: 1.2rem;
+}
+
+.nav-btn.active {
+  color: #000;
+  font-weight: 600;
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 16px;
+  border-radius: 999px;
+  border: none;
+  background: #c62828;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.logout-btn:active {
+  transform: scale(0.97);
+}
+
+/* DESKTOP TWEAKS */
+
+@media (min-width: 900px) {
+  body {
+    max-width: 600px;
+    margin: 0 auto;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+  }
+}
