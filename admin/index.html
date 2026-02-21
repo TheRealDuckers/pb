@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>PracticeBase Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="logo">PracticeBase Admin</div>
+
+    <nav>
+      <button class="nav-btn active" data-page="announcements">Announcements</button>
+      <button class="nav-btn" data-page="schedule">Schedule</button>
+      <button class="nav-btn" data-page="media">Media</button>
+      <button class="nav-btn" data-page="users">Users</button>
+    </nav>
+
+    <div class="bottom">
+      <div id="pbName" class="pb-name">Loading PB…</div>
+      <button id="logoutBtn" class="logout">Logout</button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main id="main">
+
+    <!-- ANNOUNCEMENTS -->
+    <section id="page-announcements" class="page active">
+      <h1>Announcements</h1>
+
+      <div class="card">
+        <h2>Create Announcement</h2>
+        <input id="annTitle" placeholder="Title">
+        <textarea id="annBody" placeholder="Message"></textarea>
+        <button id="createAnnBtn">Post Announcement</button>
+      </div>
+
+      <div class="card">
+        <h2>Existing Announcements</h2>
+        <div id="annList" class="list">Loading…</div>
+      </div>
+    </section>
+
+    <!-- SCHEDULE -->
+    <section id="page-schedule" class="page">
+      <h1>Schedule</h1>
+
+      <div class="card">
+        <h2>Add Rehearsal</h2>
+        <input id="schedTitle" placeholder="Title">
+        <input id="schedDate" type="datetime-local">
+        <button id="createSchedBtn">Add to Schedule</button>
+      </div>
+
+      <div class="card">
+        <h2>Upcoming</h2>
+        <div id="schedList" class="list">Loading…</div>
+      </div>
+    </section>
+
+    <!-- MEDIA -->
+    <section id="page-media" class="page">
+      <h1>Media</h1>
+
+      <div class="card">
+        <h2>Upload File</h2>
+        <input id="mediaFile" type="file">
+        <button id="uploadMediaBtn">Upload</button>
+      </div>
+
+      <div class="card">
+        <h2>Media Library</h2>
+        <div id="mediaList" class="list">Loading…</div>
+      </div>
+    </section>
+
+    <!-- USERS -->
+    <section id="page-users" class="page">
+      <h1>Cast Members</h1>
+
+      <div class="card">
+        <h2>Users in this PB</h2>
+        <div id="usersList" class="list">Loading…</div>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

@@ -22,12 +22,20 @@
       <button id="createPBBtn">Create PracticeBase</button>
     </div>
 
-    <!-- ASSIGN ADMIN -->
+    <!-- ASSIGN ADMIN (simple) -->
     <div class="card">
       <h2>Assign Admin to PB</h2>
       <input id="adminEmail" placeholder="Admin Email">
       <input id="assignPBCode" placeholder="PB Code">
       <button id="assignAdminBtn">Assign Admin</button>
+    </div>
+
+    <!-- MAKE ADMIN (with PB dropdown) -->
+    <div class="card">
+      <h2>Make Admin</h2>
+      <input id="makeAdminEmail" placeholder="User Email">
+      <select id="makeAdminPB"></select>
+      <button id="makeAdminBtn">Make Admin</button>
     </div>
 
     <!-- QR CODE -->
@@ -38,16 +46,24 @@
       <div id="qrOutput"></div>
     </div>
 
-    <!-- PB LIST -->
+    <!-- LIST PBs -->
     <div class="card">
       <h2>All PracticeBases</h2>
       <div id="pbList" class="list">Loading…</div>
     </div>
 
-    <!-- ADMIN LIST -->
+    <!-- LIST ADMINS -->
     <div class="card">
       <h2>All Admins</h2>
       <div id="adminList" class="list">Loading…</div>
+    </div>
+
+    <!-- USER SEARCH & MANAGEMENT -->
+    <div class="card">
+      <h2>Search Users</h2>
+      <input id="searchUserInput" placeholder="Search by email">
+      <button id="searchUserBtn">Search</button>
+      <div id="searchResults" class="list" style="margin-top:15px;"></div>
     </div>
 
   </div>
