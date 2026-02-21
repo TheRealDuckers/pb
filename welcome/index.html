@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Welcome to PracticeBase</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="welcome.css">
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>Welcome to PracticeBase</h1>
+    <p class="subtitle">Choose how you want to get started</p>
+
+    <button id="joinBtn" class="primary">Join a PracticeBase</button>
+    <button id="loginBtn" class="secondary">Login</button>
+
+    <!-- QR Scanner Modal -->
+    <div id="qrModal" class="modal hidden">
+      <div class="modal-content">
+        <h2>Scan PracticeBase QR Code</h2>
+        <video id="qrVideo" autoplay></video>
+        <button id="closeQR" class="secondary small">Close</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+  <script src="welcome.js"></script>
+</body>
+</html>
