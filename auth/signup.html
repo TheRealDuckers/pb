@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Create Account</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="auth.css">
+</head>
+
+<body>
+
+  <div class="auth-card">
+
+    <h2>Create Your PracticeBase Account</h2>
+
+    <!-- PB NAME BANNER -->
+    <div id="pbNameBanner" class="pb-name-banner">
+      Loading PracticeBase…
+    </div>
+
+    <form id="signupForm">
+      <label>Email</label>
+      <input id="email" type="email" required>
+
+      <label>Password</label>
+      <input id="password" type="password" required>
+
+      <label>PracticeBase Code</label>
+      <input id="pbCode" type="text" readonly>
+
+      <button type="submit">Create Account</button>
+    </form>
+
+  </div>
+
+  <script type="module" src="signup.js"></script>
+</body>
+</html>

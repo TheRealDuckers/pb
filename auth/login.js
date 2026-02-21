@@ -1,57 +1,35 @@
-// /auth/login.js
-import { auth, db } from "./firebase.js";
 import {
+  auth,
+  db,
   signInWithEmailAndPassword,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-import {
   doc,
   getDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+} from "../firebase.js";
 
-// If already logged in, route immediately
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return;
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-  const snap = await getDoc(doc(db, "users", user.uid));
-  if (!snap.exists()) return;
-
-  const data = snap.data();
-  routeByRole(data.role);
-});
-
-function routeByRole(role) {
-  if (role === "super") window.location.href = "/super-user/";
-  else if (role === "admin") window.location.href = "/admin/";
-  else window.location.href = "/cast/";
-}
-
-document.getElementById("btn-login").onclick = async () => {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
-  const errorEl = document.getElementById("error-login");
-
-  errorEl.textContent = "";
 
   try {
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-    const user = cred.user;
+    const userCred = await signInWithEmailAndPassword(auth, email, password);
+    const uid = userCred.user.uid;
 
-    const snap = await getDoc(doc(db, "users", user.uid));
-    if (!snap.exists()) {
-      errorEl.textContent = "User record missing.";
+    // Find which PB this user belongs to
+    const pbSnap = await getDoc(doc(db, "userToPB", uid));
+
+    if (!pbSnap.exists()) {
+      alert("Your account is not linked to a PracticeBase.");
       return;
     }
 
-    const data = snap.data();
-    if (!data.emailVerified) {
-      errorEl.textContent = "Please verify your email first.";
-      return;
-    }
+    const pbCode = pbSnap.data().pbCode;
 
-    routeByRole(data.role);
+    localStorage.setItem("pbCode", pbCode);
+
+    window.location.href = "/";
   } catch (err) {
-    errorEl.textContent = err.message;
+    alert(err.message);
   }
-};
+});
