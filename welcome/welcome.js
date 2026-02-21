@@ -77,7 +77,7 @@ function scanLoop() {
         if (pbCode) {
           scanning = false;
           stream.getTracks().forEach(t => t.stop());
-          window.location.href = `/auth/signup.html?code=${pbCode}`;
+          window.location.href = `/auth/signup?code=${pbCode}`;
           return;
         }
       }
