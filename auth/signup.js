@@ -44,21 +44,25 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
     const userCred = await createUserWithEmailAndPassword(auth, email, password);
     const uid = userCred.user.uid;
 
-    // Add user to PB
+    // 1️ Map user → PB FIRST (so isMemberOf(pbCode) becomes true)
+    await setDoc(doc(db, "userToPB", uid), {
+      pbCode
+    });
+
+    // 2️ Now we can safely create the PB user profile
     await setDoc(doc(db, `practicebases/${pbCode}/users/${uid}`), {
       email,
       joinedAt: serverTimestamp()
     });
 
-    // Map user → PB
-    await setDoc(doc(db, "userToPB", uid), {
-      pbCode
-    });
-
+    // Optional: store PB locally
     localStorage.setItem("pbCode", pbCode);
 
-    window.location.href = "/"; // go to cast app
+    // Redirect to cast app
+    window.location.href = "/";
+
   } catch (err) {
     alert(err.message);
   }
 });
+
