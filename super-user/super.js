@@ -65,10 +65,17 @@ document.getElementById("createPBBtn").addEventListener("click", async () => {
     return;
   }
 
+  // 1 Create the root PB document (required for listing)
+  await setDoc(doc(db, "practicebases", code), {
+    name,
+    createdAt: serverTimestamp()
+  }, { merge: true });
+
+  // 2 Create the meta/info document (your existing structure)
   await setDoc(doc(db, `practicebases/${code}/meta/info`), {
     name,
     createdAt: serverTimestamp()
-  });
+  }, { merge: true });
 
   alert("PracticeBase created!");
   document.getElementById("pbCode").value = "";
@@ -76,6 +83,7 @@ document.getElementById("createPBBtn").addEventListener("click", async () => {
   await loadPBs();
   await loadPBDropdown();
 });
+
 
 // ------------------------------
 // ASSIGN ADMIN (simple)
