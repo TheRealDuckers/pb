@@ -5,150 +5,367 @@ import {
   doc,
   getDoc,
   getDocs,
-  collection
+  collection,
+  signOut
 } from "../firebase.js";
 
-const pbNameEl = document.getElementById("pbName");
-const userEmailEl = document.getElementById("userEmail");
-const profileEmailEl = document.getElementById("profileEmail");
-const profilePBEl = document.getElementById("profilePB");
+// ------------------------------
+// DOM ELEMENTS
+// ------------------------------
+const pbSelect = document.getElementById("pbSelect");
+const pbName = document.getElementById("pbName");
 
-const pages = document.querySelectorAll(".page");
-const navBtns = document.querySelectorAll(".nav-btn");
+// Tag filter
+const tagFilterScroll = document.getElementById("tagFilterScroll");
 
-const annList = document.getElementById("annList");
-const schedList = document.getElementById("schedList");
+// Sections
+const announcementsSection = document.getElementById("announcementsSection");
+const scheduleSection = document.getElementById("scheduleSection");
+const mediaSection = document.getElementById("mediaSection");
+const profileSection = document.getElementById("profileSection");
+
+// Lists
+const announcementList = document.getElementById("announcementList");
+const scheduleList = document.getElementById("scheduleList");
 const mediaList = document.getElementById("mediaList");
+
+// Profile
+const profileEmail = document.getElementById("profileEmail");
+const profilePB = document.getElementById("profilePB");
 const logoutBtn = document.getElementById("logoutBtn");
 
-let currentPB = null;
-let currentUser = null;
+// Bottom nav
+const navItems = document.querySelectorAll(".navItem");
 
-// AUTH + PB LOOKUP
+// ------------------------------
+// STATE
+// ------------------------------
+let currentUser = null;
+let currentPBCode = null;
+let currentTags = [];
+let selectedTag = "All";
+
+// ------------------------------
+// AUTH
+// ------------------------------
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    window.location.href = "/auth/login.html";
+    window.location.href = "/login.html";
     return;
   }
 
   currentUser = user;
-  userEmailEl.textContent = user.email || "";
-  profileEmailEl.textContent = user.email || "";
+  profileEmail.textContent = user.email;
 
-  const pbRef = doc(db, "userToPB", user.uid);
-  const pbSnap = await getDoc(pbRef);
+  await loadPBs();
+  attachNavHandlers();
+});
 
-  if (!pbSnap.exists()) {
-    pbNameEl.textContent = "No PB assigned";
-    profilePBEl.textContent = "None";
-    return;
+// ------------------------------
+// LOAD PRACTICEBASES
+// ------------------------------
+async function loadPBs() {
+  const snap = await getDocs(collection(db, "practicebases"));
+
+  pbSelect.innerHTML = "";
+
+  const pbs = [];
+  snap.forEach((docSnap) => {
+    pbs.push({ id: docSnap.id, ...docSnap.data() });
+  });
+
+  pbs.sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
+
+  pbs.forEach((pb) => {
+    const opt = document.createElement("option");
+    opt.value = pb.id;
+    opt.textContent = pb.name || pb.id;
+    pbSelect.appendChild(opt);
+  });
+
+  if (pbs.length > 0) {
+    currentPBCode = pbs[0].id;
+    pbSelect.value = currentPBCode;
+    pbName.textContent = pbs[0].name || pbs[0].id;
+    profilePB.textContent = pbs[0].name || pbs[0].id;
+    await loadAllForPB();
   }
 
-  currentPB = pbSnap.data().pbCode;
-  profilePBEl.textContent = currentPB;
+  pbSelect.addEventListener("change", async () => {
+    currentPBCode = pbSelect.value;
+    const selected = pbs.find((p) => p.id === currentPBCode);
+    pbName.textContent = selected?.name || currentPBCode;
+    profilePB.textContent = selected?.name || currentPBCode;
+    await loadAllForPB();
+  });
+}
 
-  const metaRef = doc(db, `practicebases/${currentPB}/meta/info`);
-  const metaSnap = await getDoc(metaRef);
-  pbNameEl.textContent = metaSnap.exists() ? metaSnap.data().name : currentPB;
+// ------------------------------
+// LOAD EVERYTHING FOR PB
+// ------------------------------
+async function loadAllForPB() {
+  await Promise.all([
+    loadTags(),
+    loadAnnouncements(),
+    loadSchedule(),
+    loadMedia()
+  ]);
+}
 
+// ------------------------------
+// TAGS
+// ------------------------------
+async function loadTags() {
+  const tagsRef = collection(db, `practicebases/${currentPBCode}/tags`);
+  const snap = await getDocs(tagsRef);
+
+  currentTags = [];
+  snap.forEach((docSnap) => {
+    currentTags.push({ id: docSnap.id, ...docSnap.data() });
+  });
+
+  renderTagFilter();
+}
+
+function renderTagFilter() {
+  // Clear all except "All"
+  tagFilterScroll.innerHTML = "";
+
+  // Add "All"
+  const allPill = document.createElement("div");
+  allPill.className = "tagFilterPill active";
+  allPill.dataset.tag = "All";
+  allPill.textContent = "All";
+  allPill.addEventListener("click", () => selectTag("All"));
+  tagFilterScroll.appendChild(allPill);
+
+  // Add dynamic tags
+  currentTags.forEach((tag) => {
+    const pill = document.createElement("div");
+    pill.className = "tagFilterPill";
+    pill.dataset.tag = tag.name;
+    pill.textContent = tag.name;
+    pill.style.borderLeft = `6px solid ${tag.color}`;
+    pill.addEventListener("click", () => selectTag(tag.name));
+    tagFilterScroll.appendChild(pill);
+  });
+}
+
+function selectTag(tag) {
+  selectedTag = tag;
+
+  // Update UI
+  document.querySelectorAll(".tagFilterPill").forEach((p) => {
+    p.classList.toggle("active", p.dataset.tag === tag);
+  });
+
+  // Reload filtered content
   loadAnnouncements();
   loadSchedule();
   loadMedia();
-});
+}
 
-// NAV
-navBtns.forEach(btn => {
-  btn.addEventListener("click", () => {
-    const page = btn.dataset.page;
-
-    navBtns.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-
-    pages.forEach(p => p.classList.remove("active"));
-    document.getElementById(`page-${page}`).classList.add("active");
-  });
-});
-
-// LOGOUT
-logoutBtn.addEventListener("click", () => {
-  auth.signOut();
-});
-
+// ------------------------------
 // ANNOUNCEMENTS
+// ------------------------------
 async function loadAnnouncements() {
-  if (!currentPB) return;
-  annList.innerHTML = "Loading…";
+  announcementList.innerHTML = "";
 
-  const snap = await getDocs(collection(db, `practicebases/${currentPB}/announcements`));
-  annList.innerHTML = "";
+  const annRef = collection(db, `practicebases/${currentPBCode}/announcements`);
+  const snap = await getDocs(annRef);
 
-  if (snap.empty) {
-    annList.innerHTML = "<div class='list-item'>No announcements yet.</div>";
-    return;
+  let items = [];
+  snap.forEach((docSnap) => {
+    items.push({ id: docSnap.id, ...docSnap.data() });
+  });
+
+  // Filter by tag
+  if (selectedTag !== "All") {
+    items = items.filter((a) => (a.tags || []).includes(selectedTag));
   }
 
-  snap.forEach(docSnap => {
-    const data = docSnap.data();
-    const div = document.createElement("div");
-    div.classList.add("list-item");
-    div.innerHTML = `
-      <div class="list-item-title">${data.title || "Announcement"}</div>
-      <div class="list-item-sub">${data.body || ""}</div>
-    `;
-    annList.appendChild(div);
+  // Sort newest first
+  items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+  items.forEach((ann) => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const title = document.createElement("h4");
+    title.textContent = ann.title || "(No title)";
+
+    const body = document.createElement("p");
+    body.textContent = ann.body || "";
+
+    const tags = document.createElement("div");
+    tags.className = "cardTags";
+    (ann.tags || []).forEach((t) => {
+      const span = document.createElement("span");
+      span.className = "cardTag";
+      span.textContent = t;
+      tags.appendChild(span);
+    });
+
+    card.appendChild(title);
+    card.appendChild(body);
+    card.appendChild(tags);
+    announcementList.appendChild(card);
   });
 }
 
+// ------------------------------
 // SCHEDULE
+// ------------------------------
 async function loadSchedule() {
-  if (!currentPB) return;
-  schedList.innerHTML = "Loading…";
+  scheduleList.innerHTML = "";
 
-  const snap = await getDocs(collection(db, `practicebases/${currentPB}/schedule`));
-  schedList.innerHTML = "";
+  const schedRef = collection(db, `practicebases/${currentPBCode}/schedule`);
+  const snap = await getDocs(schedRef);
 
-  if (snap.empty) {
-    schedList.innerHTML = "<div class='list-item'>No rehearsals yet.</div>";
-    return;
+  let items = [];
+  snap.forEach((docSnap) => {
+    items.push({ id: docSnap.id, ...docSnap.data() });
+  });
+
+  // Filter by tag
+  if (selectedTag !== "All") {
+    items = items.filter((a) => (a.tags || []).includes(selectedTag));
   }
 
-  snap.forEach(docSnap => {
-    const data = docSnap.data();
-    const dateStr = data.date ? new Date(data.date).toLocaleString() : "";
-    const div = document.createElement("div");
-    div.classList.add("list-item");
-    div.innerHTML = `
-      <div class="list-item-title">${data.title || "Rehearsal"}</div>
-      <div class="list-item-sub">${dateStr}</div>
-    `;
-    schedList.appendChild(div);
+  // Sort by date
+  items.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+
+  items.forEach((item) => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const title = document.createElement("h4");
+    title.textContent = item.date || "(No date)";
+
+    const loc = document.createElement("p");
+    loc.textContent = item.location || "";
+
+    const notes = document.createElement("p");
+    notes.textContent = item.notes || "";
+
+    const tags = document.createElement("div");
+    tags.className = "cardTags";
+    (item.tags || []).forEach((t) => {
+      const span = document.createElement("span");
+      span.className = "cardTag";
+      span.textContent = t;
+      tags.appendChild(span);
+    });
+
+    card.appendChild(title);
+    card.appendChild(loc);
+    card.appendChild(notes);
+    card.appendChild(tags);
+    scheduleList.appendChild(card);
   });
 }
 
+// ------------------------------
 // MEDIA
+// ------------------------------
 async function loadMedia() {
-  if (!currentPB) return;
-  mediaList.innerHTML = "Loading…";
-
-  const snap = await getDocs(collection(db, `practicebases/${currentPB}/media`));
   mediaList.innerHTML = "";
 
-  if (snap.empty) {
-    mediaList.innerHTML = "<div class='list-item'>No media yet.</div>";
-    return;
+  const mediaRef = collection(db, `practicebases/${currentPBCode}/media`);
+  const snap = await getDocs(mediaRef);
+
+  let items = [];
+  snap.forEach((docSnap) => {
+    items.push({ id: docSnap.id, ...docSnap.data() });
+  });
+
+  // Filter by tag
+  if (selectedTag !== "All") {
+    items = items.filter((m) => (m.tags || []).includes(selectedTag));
   }
 
-  snap.forEach(docSnap => {
-    const data = docSnap.data();
-    const sizeKB = data.size ? Math.round(data.size / 1024) : null;
-    const div = document.createElement("div");
-    div.classList.add("list-item");
-    div.innerHTML = `
-      <div class="list-item-title">${data.name || "File"}</div>
-      <div class="list-item-sub">
-        ${data.type || ""}${sizeKB ? ` • ${sizeKB} KB` : ""}
-      </div>
-    `;
-    mediaList.appendChild(div);
+  // Group by folder
+  const byFolder = {};
+  items.forEach((m) => {
+    const folderId = m.folderId || "";
+    if (!byFolder[folderId]) byFolder[folderId] = [];
+    byFolder[folderId].push(m);
+  });
+
+  // Load folder names
+  const folderSnap = await getDocs(collection(db, `practicebases/${currentPBCode}/mediaFolders`));
+  const folders = {};
+  folderSnap.forEach((docSnap) => {
+    folders[docSnap.id] = docSnap.data().name;
+  });
+
+  Object.keys(byFolder).forEach((folderId) => {
+    const group = document.createElement("div");
+    group.className = "mediaGroup";
+
+    const heading = document.createElement("h3");
+    heading.textContent = folderId === "" ? "No folder" : folders[folderId] || folderId;
+    group.appendChild(heading);
+
+    byFolder[folderId].forEach((m) => {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const title = document.createElement("h4");
+      title.textContent = m.name || "(No name)";
+
+      const link = document.createElement("a");
+      link.href = m.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = m.url;
+
+      const tags = document.createElement("div");
+      tags.className = "cardTags";
+      (m.tags || []).forEach((t) => {
+        const span = document.createElement("span");
+        span.className = "cardTag";
+        span.textContent = t;
+        tags.appendChild(span);
+      });
+
+      card.appendChild(title);
+      card.appendChild(link);
+      card.appendChild(tags);
+      group.appendChild(card);
+    });
+
+    mediaList.appendChild(group);
   });
 }
+
+// ------------------------------
+// NAVIGATION
+// ------------------------------
+function attachNavHandlers() {
+  navItems.forEach((item) => {
+    item.addEventListener("click", () => {
+      const target = item.dataset.target;
+
+      // Update nav UI
+      navItems.forEach((n) => n.classList.remove("active"));
+      item.classList.add("active");
+
+      // Show correct section
+      announcementsSection.classList.add("hidden");
+      scheduleSection.classList.add("hidden");
+      mediaSection.classList.add("hidden");
+      profileSection.classList.add("hidden");
+
+      document.getElementById(target).classList.remove("hidden");
+    });
+  });
+}
+
+// ------------------------------
+// LOGOUT
+// ------------------------------
+logoutBtn.addEventListener("click", async () => {
+  await signOut(auth);
+  window.location.href = "/login.html";
+});

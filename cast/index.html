@@ -1,72 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PracticeBase Cast</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cast Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="cast.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
-
 <body>
 
-  <header id="header">
-    <div id="pbName">Loading…</div>
-    <div id="userEmail" class="user-email"></div>
+<div id="app">
+
+  <!-- HEADER -->
+  <header id="topBar">
+    <h1 id="pbName">Loading...</h1>
+    <select id="pbSelect"></select>
   </header>
 
-  <main id="main">
+  <!-- TAG FILTER BAR -->
+  <div id="tagFilterBar">
+    <div id="tagFilterScroll">
+      <div class="tagFilterPill active" data-tag="All">All</div>
+      <!-- dynamic tags inserted here -->
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main id="mainContent">
 
     <!-- ANNOUNCEMENTS -->
-    <section id="page-announcements" class="page active">
-      <h1>Announcements</h1>
-      <div id="annList" class="list">Loading…</div>
+    <section id="announcementsSection" class="pageSection">
+      <h2>Announcements</h2>
+      <div id="announcementList"></div>
     </section>
 
     <!-- SCHEDULE -->
-    <section id="page-schedule" class="page">
-      <h1>Schedule</h1>
-      <div id="schedList" class="list">Loading…</div>
+    <section id="scheduleSection" class="pageSection hidden">
+      <h2>Rehearsals</h2>
+      <div id="scheduleList"></div>
     </section>
 
     <!-- MEDIA -->
-    <section id="page-media" class="page">
-      <h1>Media</h1>
-      <div id="mediaList" class="list">Loading…</div>
+    <section id="mediaSection" class="pageSection hidden">
+      <h2>Media</h2>
+      <div id="mediaList"></div>
     </section>
 
     <!-- PROFILE -->
-    <section id="page-profile" class="page">
-      <h1>Profile</h1>
-      <div class="card">
-        <p><strong>Email:</strong> <span id="profileEmail">Loading…</span></p>
-        <p><strong>PracticeBase:</strong> <span id="profilePB">Loading…</span></p>
+    <section id="profileSection" class="pageSection hidden">
+      <h2>Your Profile</h2>
+
+      <div id="profileCard">
+        <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+        <p><strong>PracticeBase:</strong> <span id="profilePB"></span></p>
       </div>
-      <button id="logoutBtn" class="logout-btn">Logout</button>
+
+      <button id="logoutBtn" class="danger">Log Out</button>
     </section>
 
   </main>
 
   <!-- BOTTOM NAV -->
   <nav id="bottomNav">
-    <button class="nav-btn active" data-page="announcements">
-      <i class="fa-solid fa-bullhorn"></i>
+    <div class="navItem active" data-target="announcementsSection">
       <span>Announcements</span>
-    </button>
-    <button class="nav-btn" data-page="schedule">
-      <i class="fa-solid fa-calendar-days"></i>
+    </div>
+    <div class="navItem" data-target="scheduleSection">
       <span>Schedule</span>
-    </button>
-    <button class="nav-btn" data-page="media">
-      <i class="fa-solid fa-photo-film"></i>
+    </div>
+    <div class="navItem" data-target="mediaSection">
       <span>Media</span>
-    </button>
-    <button class="nav-btn" data-page="profile">
-      <i class="fa-solid fa-user"></i>
+    </div>
+    <div class="navItem" data-target="profileSection">
       <span>Profile</span>
-    </button>
+    </div>
   </nav>
 
-  <script type="module" src="cast.js"></script>
+</div>
+
+<script type="module" src="cast.js"></script>
 </body>
 </html>
