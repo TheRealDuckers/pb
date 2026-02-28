@@ -1,114 +1,147 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PracticeBase Admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel</title>
   <link rel="stylesheet" href="admin.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
 </head>
-
 <body>
 
-  <!-- SIDEBAR -->
-  <aside id="sidebar">
-    <div class="logo">PracticeBase Admin</div>
+<div id="adminContainer">
 
-    <nav>
-  <button class="nav-btn active" data-page="announcements">
-    <i class="fa-solid fa-bullhorn"></i>
-    <span>Announcements</span>
-  </button>
+  <!-- HEADER -->
+  <header>
+    <h1>Admin Control Panel</h1>
+    <p>Manage announcements, rehearsals, users, tags, media, and settings.</p>
+  </header>
 
-  <button class="nav-btn" data-page="schedule">
-    <i class="fa-solid fa-calendar-days"></i>
-    <span>Schedule</span>
-  </button>
+  <!-- PB SELECTOR -->
+  <section class="section">
+    <h2>Select PracticeBase</h2>
+    <select id="pbSelect"></select>
+  </section>
 
-  <button class="nav-btn" data-page="media">
-    <i class="fa-solid fa-photo-film"></i>
-    <span>Media</span>
-  </button>
+  <!-- ANNOUNCEMENTS -->
+  <section class="section">
+    <h2>Announcements</h2>
 
-  <button class="nav-btn" data-page="users">
-    <i class="fa-solid fa-users"></i>
-    <span>Users</span>
-  </button>
-</nav>
-
-
-    <div class="bottom">
-      <div id="pbName" class="pb-name">Loading PB…</div>
-      <button id="logoutBtn" class="logout">Logout</button>
+    <div class="formRow">
+      <input type="text" id="announcementTitle" placeholder="Title">
     </div>
-  </aside>
 
-  <!-- MAIN CONTENT -->
-  <main id="main">
+    <div class="formRow">
+      <textarea id="announcementBody" placeholder="Announcement text"></textarea>
+    </div>
 
-    <!-- ANNOUNCEMENTS -->
-    <section id="page-announcements" class="page active">
-      <h1>Announcements</h1>
+    <div class="formRow">
+      <label>Tags:</label>
+      <div id="announcementTagSelector" class="tagCheckboxContainer"></div>
+    </div>
 
-      <div class="card">
-        <h2>Create Announcement</h2>
-        <input id="annTitle" placeholder="Title">
-        <textarea id="annBody" placeholder="Message"></textarea>
-        <button id="createAnnBtn">Post Announcement</button>
-      </div>
+    <button id="addAnnouncementBtn">Post Announcement</button>
 
-      <div class="card">
-        <h2>Existing Announcements</h2>
-        <div id="annList" class="list">Loading…</div>
-      </div>
-    </section>
+    <h3>Existing Announcements</h3>
+    <div id="announcementList"></div>
+  </section>
 
-    <!-- SCHEDULE -->
-    <section id="page-schedule" class="page">
-      <h1>Schedule</h1>
+  <!-- SCHEDULE / REHEARSALS -->
+  <section class="section">
+    <h2>Rehearsals / Schedule</h2>
 
-      <div class="card">
-        <h2>Add Rehearsal</h2>
-        <input id="schedTitle" placeholder="Title">
-        <input id="schedDate" type="datetime-local">
-        <button id="createSchedBtn">Add to Schedule</button>
-      </div>
+    <div class="formRow">
+      <input type="datetime-local" id="scheduleDate">
+    </div>
 
-      <div class="card">
-        <h2>Upcoming</h2>
-        <div id="schedList" class="list">Loading…</div>
-      </div>
-    </section>
+    <div class="formRow">
+      <input type="text" id="scheduleLocation" placeholder="Location">
+    </div>
 
-    <!-- MEDIA -->
-    <section id="page-media" class="page">
-      <h1>Media</h1>
+    <div class="formRow">
+      <textarea id="scheduleNotes" placeholder="Notes"></textarea>
+    </div>
 
-      <div class="card">
-        <h2>Upload File</h2>
-        <input id="mediaFile" type="file">
-        <button id="uploadMediaBtn">Upload</button>
-      </div>
+    <div class="formRow">
+      <label>Tags:</label>
+      <div id="scheduleTagSelector" class="tagCheckboxContainer"></div>
+    </div>
 
-      <div class="card">
-        <h2>Media Library</h2>
-        <div id="mediaList" class="list">Loading…</div>
-      </div>
-    </section>
+    <button id="addScheduleBtn">Add Rehearsal</button>
 
-    <!-- USERS -->
-    <section id="page-users" class="page">
-      <h1>Cast Members</h1>
+    <h3>Existing Rehearsals</h3>
+    <div id="scheduleList"></div>
+  </section>
 
-      <div class="card">
-        <h2>Users in this PB</h2>
-        <div id="usersList" class="list">Loading…</div>
-      </div>
-    </section>
+  <!-- USERS -->
+  <section class="section">
+    <h2>Users</h2>
 
-  </main>
+    <div id="userList"></div>
+  </section>
 
-  <script type="module" src="admin.js"></script>
+  <!-- TAG MANAGER -->
+  <section class="section">
+    <h2>Tags</h2>
+
+    <div id="tagList" class="pillContainer"></div>
+
+    <div class="formRow">
+      <input type="text" id="newTagName" placeholder="New tag name">
+      <input type="color" id="newTagColor" value="#ff66aa">
+      <button id="addTagBtn">Add Tag</button>
+    </div>
+  </section>
+
+  <!-- MEDIA FOLDERS -->
+  <section class="section">
+    <h2>Media Folders</h2>
+
+    <div id="folderList" class="folderContainer"></div>
+
+    <div class="formRow">
+      <input type="text" id="newFolderName" placeholder="New folder name">
+      <button id="addFolderBtn">Add Folder</button>
+    </div>
+  </section>
+
+  <!-- ADD MEDIA LINK -->
+  <section class="section">
+    <h2>Add Media Link</h2>
+
+    <div class="formRow">
+      <input type="text" id="mediaName" placeholder="Media name">
+    </div>
+
+    <div class="formRow">
+      <input type="text" id="mediaURL" placeholder="https://...">
+    </div>
+
+    <div class="formRow">
+      <label>Folder:</label>
+      <select id="mediaFolderSelect"></select>
+    </div>
+
+    <div class="formRow">
+      <label>Tags:</label>
+      <div id="mediaTagSelector" class="tagCheckboxContainer"></div>
+    </div>
+
+    <button id="addMediaBtn">Add Media</button>
+
+    <h3>Existing Media</h3>
+    <div id="mediaList"></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="section">
+    <h2>Settings</h2>
+
+    <div class="formRow">
+      <button id="deletePBBtn" class="danger">Delete Entire PracticeBase</button>
+    </div>
+  </section>
+
+</div>
+
+<script type="module" src="admin.js"></script>
 </body>
 </html>
