@@ -3,17 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <title>Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="admin.css">
 </head>
 <body>
 
-<div id="adminContainer">
+<!-- MOBILE TOP BAR -->
+<div id="topBar">
+  <button id="menuBtn">☰</button>
+  <h1>Admin</h1>
+</div>
 
-  <!-- HEADER -->
-  <header>
-    <h1>Admin Control Panel</h1>
-    <p>Manage announcements, rehearsals, users, tags, media, and settings.</p>
-  </header>
+<!-- SLIDE‑OUT SIDEBAR -->
+<div id="sidebarOverlay"></div>
+<div id="sidebar">
+  <div class="sidebarItem active" data-target="announcementsSection">Announcements</div>
+  <div class="sidebarItem" data-target="scheduleSection">Rehearsals</div>
+  <div class="sidebarItem" data-target="usersSection">Users</div>
+  <div class="sidebarItem" data-target="tagsSection">Tags</div>
+  <div class="sidebarItem" data-target="foldersSection">Media Folders</div>
+  <div class="sidebarItem" data-target="mediaSection">Media</div>
+  <div class="sidebarItem" data-target="settingsSection">Settings</div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="adminMain">
 
   <!-- PB SELECTOR -->
   <section class="section">
@@ -22,7 +36,7 @@
   </section>
 
   <!-- ANNOUNCEMENTS -->
-  <section class="section">
+  <section id="announcementsSection" class="section">
     <h2>Announcements</h2>
 
     <div class="formRow">
@@ -44,9 +58,9 @@
     <div id="announcementList"></div>
   </section>
 
-  <!-- SCHEDULE / REHEARSALS -->
-  <section class="section">
-    <h2>Rehearsals / Schedule</h2>
+  <!-- SCHEDULE -->
+  <section id="scheduleSection" class="section hidden">
+    <h2>Rehearsals</h2>
 
     <div class="formRow">
       <input type="datetime-local" id="scheduleDate">
@@ -72,14 +86,13 @@
   </section>
 
   <!-- USERS -->
-  <section class="section">
+  <section id="usersSection" class="section hidden">
     <h2>Users</h2>
-
     <div id="userList"></div>
   </section>
 
-  <!-- TAG MANAGER -->
-  <section class="section">
+  <!-- TAGS -->
+  <section id="tagsSection" class="section hidden">
     <h2>Tags</h2>
 
     <div id="tagList" class="pillContainer"></div>
@@ -92,7 +105,7 @@
   </section>
 
   <!-- MEDIA FOLDERS -->
-  <section class="section">
+  <section id="foldersSection" class="section hidden">
     <h2>Media Folders</h2>
 
     <div id="folderList" class="folderContainer"></div>
@@ -103,8 +116,8 @@
     </div>
   </section>
 
-  <!-- ADD MEDIA LINK -->
-  <section class="section">
+  <!-- MEDIA -->
+  <section id="mediaSection" class="section hidden">
     <h2>Add Media Link</h2>
 
     <div class="formRow">
@@ -132,12 +145,9 @@
   </section>
 
   <!-- SETTINGS -->
-  <section class="section">
+  <section id="settingsSection" class="section hidden">
     <h2>Settings</h2>
-
-    <div class="formRow">
-      <button id="deletePBBtn" class="danger">Delete Entire PracticeBase</button>
-    </div>
+    <button id="deletePBBtn" class="danger">Delete Entire PracticeBase</button>
   </section>
 
 </div>

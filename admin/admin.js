@@ -10,12 +10,29 @@ import {
   deleteDoc,
   collection,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  signOut
 } from "../firebase.js";
 
-// ------------------------------
-// DOM ELEMENTS
-// ------------------------------
+/* ---------------------------------------------------
+   DOWNTIME CHECK
+--------------------------------------------------- */
+async function checkDowntime() {
+  const ref = doc(db, "config/app");
+  const snap = await getDoc(ref);
+  if (snap.exists() && snap.data().isDown === true) {
+    window.location.href = "/down.html";
+  }
+}
+
+/* ---------------------------------------------------
+   DOM ELEMENTS
+--------------------------------------------------- */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.getElementById("sidebar");
+const sidebarOverlay = document.getElementById("sidebarOverlay");
+const sidebarItems = document.querySelectorAll(".sidebarItem");
+
 const pbSelect = document.getElementById("pbSelect");
 
 // Announcements
@@ -58,43 +75,45 @@ const mediaList = document.getElementById("mediaList");
 // Settings
 const deletePBBtn = document.getElementById("deletePBBtn");
 
-// ------------------------------
-// STATE
-// ------------------------------
+/* ---------------------------------------------------
+   STATE
+--------------------------------------------------- */
 let currentUser = null;
 let currentPBCode = null;
 let currentTags = [];
 let currentFolders = [];
 
-// ------------------------------
-// AUTH INIT
-// ------------------------------
+/* ---------------------------------------------------
+   AUTH INIT
+--------------------------------------------------- */
 onAuthStateChanged(auth, async (user) => {
+  await checkDowntime();
+
   if (!user) {
     window.location.href = "/login.html";
     return;
   }
+
   currentUser = user;
   await loadPBs();
+  attachSidebarHandlers();
   attachEventHandlers();
 });
 
-// ------------------------------
-// HELPERS
-// ------------------------------
+/* ---------------------------------------------------
+   HELPERS
+--------------------------------------------------- */
 function clearElement(el) {
   while (el.firstChild) el.removeChild(el.firstChild);
 }
 
 function getSelectedTags(container) {
-  const checked = Array.from(container.querySelectorAll("input[type=checkbox]:checked"));
-  return checked.map((c) => c.value);
+  return Array.from(container.querySelectorAll("input[type=checkbox]:checked"))
+    .map((c) => c.value);
 }
 
 function createTagCheckboxes(container, tags) {
   clearElement(container);
-
-  // "All" is a UI filter concept, not stored on docs, so we don't add it here.
   tags.forEach((tag) => {
     const label = document.createElement("label");
     label.className = "tagCheckbox";
@@ -103,53 +122,87 @@ function createTagCheckboxes(container, tags) {
     input.type = "checkbox";
     input.value = tag.name;
 
-    const colorDot = document.createElement("span");
-    colorDot.className = "tagColorDot";
-    colorDot.style.backgroundColor = tag.color || "#888";
+    const dot = document.createElement("span");
+    dot.className = "tagColorDot";
+    dot.style.backgroundColor = tag.color;
 
     const text = document.createElement("span");
     text.textContent = tag.name;
 
     label.appendChild(input);
-    label.appendChild(colorDot);
+    label.appendChild(dot);
     label.appendChild(text);
     container.appendChild(label);
   });
 }
 
-// ------------------------------
-// LOAD PRACTICEBASES
-// ------------------------------
-async function loadPBs() {
-  clearElement(pbSelect);
+/* ---------------------------------------------------
+   SIDEBAR LOGIC
+--------------------------------------------------- */
+function openSidebar() {
+  sidebar.classList.add("open");
+  sidebarOverlay.classList.add("visible");
+}
 
-  const snap = await getDocs(collection(db, "practicebases"));
-  const options = [];
-  snap.forEach((docSnap) => {
-    options.push({ id: docSnap.id, data: docSnap.data() });
+function closeSidebar() {
+  sidebar.classList.remove("open");
+  sidebarOverlay.classList.remove("visible");
+}
+
+menuBtn.addEventListener("click", openSidebar);
+sidebarOverlay.addEventListener("click", closeSidebar);
+
+function attachSidebarHandlers() {
+  sidebarItems.forEach((item) => {
+    item.addEventListener("click", () => {
+      const target = item.dataset.target;
+
+      sidebarItems.forEach((i) => i.classList.remove("active"));
+      item.classList.add("active");
+
+      document.querySelectorAll(".section").forEach((sec) => sec.classList.add("hidden"));
+      document.getElementById(target).classList.remove("hidden");
+
+      closeSidebar();
+    });
   });
+}
 
-  options.sort((a, b) => (a.data.name || a.id).localeCompare(b.data.name || b.id));
+/* ---------------------------------------------------
+   LOAD PRACTICEBASES
+--------------------------------------------------- */
+async function loadPBs() {
+  const snap = await getDocs(collection(db, "practicebases"));
+  pbSelect.innerHTML = "";
 
-  options.forEach((pb) => {
+  const pbs = [];
+  snap.forEach((docSnap) => pbs.push({ id: docSnap.id, ...docSnap.data() }));
+
+  pbs.sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
+
+  pbs.forEach((pb) => {
     const opt = document.createElement("option");
     opt.value = pb.id;
-    opt.textContent = pb.data.name || pb.id;
+    opt.textContent = pb.name || pb.id;
     pbSelect.appendChild(opt);
   });
 
-  if (options.length > 0) {
-    currentPBCode = options[0].id;
+  if (pbs.length > 0) {
+    currentPBCode = pbs[0].id;
     pbSelect.value = currentPBCode;
     await loadAllForPB();
   }
+
+  pbSelect.addEventListener("change", async () => {
+    currentPBCode = pbSelect.value;
+    await loadAllForPB();
+  });
 }
 
-// ------------------------------
-// LOAD EVERYTHING FOR CURRENT PB
-// ------------------------------
+/* ---------------------------------------------------
+   LOAD EVERYTHING FOR PB
+--------------------------------------------------- */
 async function loadAllForPB() {
-  if (!currentPBCode) return;
   await Promise.all([
     loadTags(),
     loadFolders(),
@@ -160,18 +213,13 @@ async function loadAllForPB() {
   ]);
 }
 
-// ------------------------------
-// TAGS
-// ------------------------------
+/* ---------------------------------------------------
+   TAGS
+--------------------------------------------------- */
 async function loadTags() {
-  if (!currentPBCode) return;
-  const tagsRef = collection(db, `practicebases/${currentPBCode}/tags`);
-  const snap = await getDocs(tagsRef);
-
+  const snap = await getDocs(collection(db, `practicebases/${currentPBCode}/tags`));
   currentTags = [];
-  snap.forEach((docSnap) => {
-    currentTags.push({ id: docSnap.id, ...docSnap.data() });
-  });
+  snap.forEach((docSnap) => currentTags.push({ id: docSnap.id, ...docSnap.data() }));
 
   renderTagList();
   createTagCheckboxes(announcementTagSelector, currentTags);
@@ -185,39 +233,34 @@ function renderTagList() {
   currentTags.forEach((tag) => {
     const pill = document.createElement("div");
     pill.className = "tagPill";
-    pill.style.borderColor = tag.color || "#888";
+    pill.style.borderColor = tag.color;
 
-    const colorDot = document.createElement("span");
-    colorDot.className = "tagColorDot";
-    colorDot.style.backgroundColor = tag.color || "#888";
+    const dot = document.createElement("span");
+    dot.className = "tagColorDot";
+    dot.style.backgroundColor = tag.color;
 
-    const nameSpan = document.createElement("span");
-    nameSpan.textContent = tag.name;
+    const name = document.createElement("span");
+    name.textContent = tag.name;
 
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "×";
-    delBtn.className = "tagDeleteBtn";
-    delBtn.addEventListener("click", () => deleteTag(tag.id));
+    const del = document.createElement("button");
+    del.className = "tagDeleteBtn";
+    del.textContent = "×";
+    del.addEventListener("click", () => deleteTag(tag.id));
 
-    pill.appendChild(colorDot);
-    pill.appendChild(nameSpan);
-    pill.appendChild(delBtn);
+    pill.appendChild(dot);
+    pill.appendChild(name);
+    pill.appendChild(del);
     tagList.appendChild(pill);
   });
 }
 
 async function addTag() {
-  if (!currentPBCode) return;
   const name = newTagNameInput.value.trim();
-  const color = newTagColorInput.value || "#888";
+  const color = newTagColorInput.value;
 
-  if (!name) {
-    alert("Enter a tag name.");
-    return;
-  }
+  if (!name) return alert("Enter a tag name.");
 
-  const tagsRef = collection(db, `practicebases/${currentPBCode}/tags`);
-  await addDoc(tagsRef, {
+  await addDoc(collection(db, `practicebases/${currentPBCode}/tags`), {
     name,
     color,
     createdAt: serverTimestamp()
@@ -227,27 +270,19 @@ async function addTag() {
   await loadTags();
 }
 
-async function deleteTag(tagId) {
-  if (!currentPBCode) return;
-  if (!confirm("Delete this tag? It will remain on existing items as plain text.")) return;
-
-  const tagRef = doc(db, `practicebases/${currentPBCode}/tags/${tagId}`);
-  await deleteDoc(tagRef);
+async function deleteTag(id) {
+  if (!confirm("Delete this tag?")) return;
+  await deleteDoc(doc(db, `practicebases/${currentPBCode}/tags/${id}`));
   await loadTags();
 }
 
-// ------------------------------
-// MEDIA FOLDERS
-// ------------------------------
+/* ---------------------------------------------------
+   MEDIA FOLDERS
+--------------------------------------------------- */
 async function loadFolders() {
-  if (!currentPBCode) return;
-  const foldersRef = collection(db, `practicebases/${currentPBCode}/mediaFolders`);
-  const snap = await getDocs(foldersRef);
-
+  const snap = await getDocs(collection(db, `practicebases/${currentPBCode}/mediaFolders`));
   currentFolders = [];
-  snap.forEach((docSnap) => {
-    currentFolders.push({ id: docSnap.id, ...docSnap.data() });
-  });
+  snap.forEach((docSnap) => currentFolders.push({ id: docSnap.id, ...docSnap.data() }));
 
   renderFolderList();
   renderFolderSelect();
@@ -260,16 +295,16 @@ function renderFolderList() {
     const row = document.createElement("div");
     row.className = "folderRow";
 
-    const nameSpan = document.createElement("span");
-    nameSpan.textContent = folder.name;
+    const name = document.createElement("span");
+    name.textContent = folder.name;
 
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "Delete";
-    delBtn.className = "smallBtn";
-    delBtn.addEventListener("click", () => deleteFolder(folder.id));
+    const del = document.createElement("button");
+    del.className = "smallBtn";
+    del.textContent = "Delete";
+    del.addEventListener("click", () => deleteFolder(folder.id));
 
-    row.appendChild(nameSpan);
-    row.appendChild(delBtn);
+    row.appendChild(name);
+    row.appendChild(del);
     folderList.appendChild(row);
   });
 }
@@ -277,10 +312,10 @@ function renderFolderList() {
 function renderFolderSelect() {
   clearElement(mediaFolderSelect);
 
-  const defaultOpt = document.createElement("option");
-  defaultOpt.value = "";
-  defaultOpt.textContent = "No folder";
-  mediaFolderSelect.appendChild(defaultOpt);
+  const none = document.createElement("option");
+  none.value = "";
+  none.textContent = "No folder";
+  mediaFolderSelect.appendChild(none);
 
   currentFolders.forEach((folder) => {
     const opt = document.createElement("option");
@@ -291,15 +326,10 @@ function renderFolderSelect() {
 }
 
 async function addFolder() {
-  if (!currentPBCode) return;
   const name = newFolderNameInput.value.trim();
-  if (!name) {
-    alert("Enter a folder name.");
-    return;
-  }
+  if (!name) return alert("Enter a folder name.");
 
-  const foldersRef = collection(db, `practicebases/${currentPBCode}/mediaFolders`);
-  await addDoc(foldersRef, {
+  await addDoc(collection(db, `practicebases/${currentPBCode}/mediaFolders`), {
     name,
     createdAt: serverTimestamp()
   });
@@ -308,41 +338,33 @@ async function addFolder() {
   await loadFolders();
 }
 
-async function deleteFolder(folderId) {
-  if (!currentPBCode) return;
-  if (!confirm("Delete this folder? Media items will keep their folderId reference.")) return;
-
-  const folderRef = doc(db, `practicebases/${currentPBCode}/mediaFolders/${folderId}`);
-  await deleteDoc(folderRef);
+async function deleteFolder(id) {
+  if (!confirm("Delete this folder?")) return;
+  await deleteDoc(doc(db, `practicebases/${currentPBCode}/mediaFolders/${id}`));
   await loadFolders();
 }
 
-// ------------------------------
-// ANNOUNCEMENTS
-// ------------------------------
+/* ---------------------------------------------------
+   ANNOUNCEMENTS
+--------------------------------------------------- */
 async function loadAnnouncements() {
-  if (!currentPBCode) return;
   clearElement(announcementList);
 
-  const annRef = collection(db, `practicebases/${currentPBCode}/announcements`);
-  const snap = await getDocs(annRef);
-
-  const items = [];
-  snap.forEach((docSnap) => {
-    items.push({ id: docSnap.id, ...docSnap.data() });
-  });
+  const snap = await getDocs(collection(db, `practicebases/${currentPBCode}/announcements`));
+  let items = [];
+  snap.forEach((docSnap) => items.push({ id: docSnap.id, ...docSnap.data() }));
 
   items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
   items.forEach((ann) => {
-    const div = document.createElement("div");
-    div.className = "card";
+    const card = document.createElement("div");
+    card.className = "card";
 
     const title = document.createElement("h4");
-    title.textContent = ann.title || "(No title)";
+    title.textContent = ann.title;
 
     const body = document.createElement("p");
-    body.textContent = ann.body || "";
+    body.textContent = ann.body;
 
     const tags = document.createElement("div");
     tags.className = "cardTags";
@@ -353,32 +375,27 @@ async function loadAnnouncements() {
       tags.appendChild(span);
     });
 
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "Delete";
-    delBtn.className = "smallBtn";
-    delBtn.addEventListener("click", () => deleteAnnouncement(ann.id));
+    const del = document.createElement("button");
+    del.className = "smallBtn";
+    del.textContent = "Delete";
+    del.addEventListener("click", () => deleteAnnouncement(ann.id));
 
-    div.appendChild(title);
-    div.appendChild(body);
-    div.appendChild(tags);
-    div.appendChild(delBtn);
-    announcementList.appendChild(div);
+    card.appendChild(title);
+    card.appendChild(body);
+    card.appendChild(tags);
+    card.appendChild(del);
+    announcementList.appendChild(card);
   });
 }
 
 async function addAnnouncement() {
-  if (!currentPBCode) return;
   const title = announcementTitleInput.value.trim();
   const body = announcementBodyInput.value.trim();
   const tags = getSelectedTags(announcementTagSelector);
 
-  if (!title && !body) {
-    alert("Enter a title or body.");
-    return;
-  }
+  if (!title && !body) return alert("Enter a title or body.");
 
-  const annRef = collection(db, `practicebases/${currentPBCode}/announcements`);
-  await addDoc(annRef, {
+  await addDoc(collection(db, `practicebases/${currentPBCode}/announcements`), {
     title,
     body,
     tags,
@@ -391,43 +408,35 @@ async function addAnnouncement() {
 }
 
 async function deleteAnnouncement(id) {
-  if (!currentPBCode) return;
   if (!confirm("Delete this announcement?")) return;
-
-  const annRef = doc(db, `practicebases/${currentPBCode}/announcements/${id}`);
-  await deleteDoc(annRef);
+  await deleteDoc(doc(db, `practicebases/${currentPBCode}/announcements/${id}`));
   await loadAnnouncements();
 }
 
-// ------------------------------
-// SCHEDULE / REHEARSALS
-// ------------------------------
+/* ---------------------------------------------------
+   SCHEDULE
+--------------------------------------------------- */
 async function loadSchedule() {
-  if (!currentPBCode) return;
   clearElement(scheduleList);
 
-  const schedRef = collection(db, `practicebases/${currentPBCode}/schedule`);
-  const snap = await getDocs(schedRef);
-
-  const items = [];
-  snap.forEach((docSnap) => {
-    items.push({ id: docSnap.id, ...docSnap.data() });
-  });
+  const snap = await getDocs(collection(db, `practicebases/${currentPBCode}/schedule`));
+  let items = [];
+  snap.forEach((docSnap) => items.push({ id: docSnap.id, ...docSnap.data() }));
 
   items.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
 
   items.forEach((item) => {
-    const div = document.createElement("div");
-    div.className = "card";
+    const card = document.createElement("div");
+    card.className = "card";
 
     const title = document.createElement("h4");
-    title.textContent = item.date || "(No date)";
+    title.textContent = item.date;
 
     const loc = document.createElement("p");
-    loc.textContent = item.location || "";
+    loc.textContent = item.location;
 
     const notes = document.createElement("p");
-    notes.textContent = item.notes || "";
+    notes.textContent = item.notes;
 
     const tags = document.createElement("div");
     tags.className = "cardTags";
@@ -438,34 +447,29 @@ async function loadSchedule() {
       tags.appendChild(span);
     });
 
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "Delete";
-    delBtn.className = "smallBtn";
-    delBtn.addEventListener("click", () => deleteSchedule(item.id));
+    const del = document.createElement("button");
+    del.className = "smallBtn";
+    del.textContent = "Delete";
+    del.addEventListener("click", () => deleteSchedule(item.id));
 
-    div.appendChild(title);
-    div.appendChild(loc);
-    div.appendChild(notes);
-    div.appendChild(tags);
-    div.appendChild(delBtn);
-    scheduleList.appendChild(div);
+    card.appendChild(title);
+    card.appendChild(loc);
+    card.appendChild(notes);
+    card.appendChild(tags);
+    card.appendChild(del);
+    scheduleList.appendChild(card);
   });
 }
 
 async function addSchedule() {
-  if (!currentPBCode) return;
   const date = scheduleDateInput.value;
   const location = scheduleLocationInput.value.trim();
   const notes = scheduleNotesInput.value.trim();
   const tags = getSelectedTags(scheduleTagSelector);
 
-  if (!date) {
-    alert("Select a date/time.");
-    return;
-  }
+  if (!date) return alert("Select a date/time.");
 
-  const schedRef = collection(db, `practicebases/${currentPBCode}/schedule`);
-  await addDoc(schedRef, {
+  await addDoc(collection(db, `practicebases/${currentPBCode}/schedule`), {
     date,
     location,
     notes,
@@ -480,59 +484,41 @@ async function addSchedule() {
 }
 
 async function deleteSchedule(id) {
-  if (!currentPBCode) return;
   if (!confirm("Delete this rehearsal?")) return;
-
-  const schedRef = doc(db, `practicebases/${currentPBCode}/schedule/${id}`);
-  await deleteDoc(schedRef);
+  await deleteDoc(doc(db, `practicebases/${currentPBCode}/schedule/${id}`));
   await loadSchedule();
 }
 
-// ------------------------------
-// USERS
-// ------------------------------
+/* ---------------------------------------------------
+   USERS
+--------------------------------------------------- */
 async function loadUsers() {
-  if (!currentPBCode) return;
   clearElement(userList);
 
-  const usersRef = collection(db, `practicebases/${currentPBCode}/users`);
-  const snap = await getDocs(usersRef);
+  const snap = await getDocs(collection(db, `practicebases/${currentPBCode}/users`));
+  let items = [];
+  snap.forEach((docSnap) => items.push({ id: docSnap.id, ...docSnap.data() }));
 
-  const items = [];
-  snap.forEach((docSnap) => {
-    items.push({ id: docSnap.id, ...docSnap.data() });
-  });
-
-  items.sort((a, b) => (a.email || a.id).localeCompare(b.email || b.id));
+  items.sort((a, b) => (a.email || "").localeCompare(b.email || ""));
 
   items.forEach((user) => {
     const row = document.createElement("div");
     row.className = "userRow";
-
-    const main = document.createElement("span");
-    main.textContent = `${user.email || "(no email)"} (${user.id})`;
-
-    row.appendChild(main);
+    row.textContent = `${user.email || "(no email)"} (${user.id})`;
     userList.appendChild(row);
   });
 }
 
-// ------------------------------
-// MEDIA
-// ------------------------------
+/* ---------------------------------------------------
+   MEDIA
+--------------------------------------------------- */
 async function loadMedia() {
-  if (!currentPBCode) return;
   clearElement(mediaList);
 
-  const mediaRef = collection(db, `practicebases/${currentPBCode}/media`);
-  const snap = await getDocs(mediaRef);
+  const snap = await getDocs(collection(db, `practicebases/${currentPBCode}/media`));
+  let items = [];
+  snap.forEach((docSnap) => items.push({ id: docSnap.id, ...docSnap.data() }));
 
-  const items = [];
-  snap.forEach((docSnap) => {
-    items.push({ id: docSnap.id, ...docSnap.data() });
-  });
-
-  // Group by folderId
   const byFolder = {};
   items.forEach((m) => {
     const folderId = m.folderId || "";
@@ -540,30 +526,28 @@ async function loadMedia() {
     byFolder[folderId].push(m);
   });
 
-  Object.keys(byFolder).forEach((folderId) => {
-    const groupDiv = document.createElement("div");
-    groupDiv.className = "mediaGroup";
+  const folderSnap = await getDocs(collection(db, `practicebases/${currentPBCode}/mediaFolders`));
+  const folders = {};
+  folderSnap.forEach((docSnap) => folders[docSnap.id] = docSnap.data().name);
 
-    const folderName =
-      folderId === ""
-        ? "No folder"
-        : currentFolders.find((f) => f.id === folderId)?.name || folderId;
+  Object.keys(byFolder).forEach((folderId) => {
+    const group = document.createElement("div");
+    group.className = "mediaGroup";
 
     const heading = document.createElement("h3");
-    heading.textContent = folderName;
-    groupDiv.appendChild(heading);
+    heading.textContent = folderId === "" ? "No folder" : folders[folderId] || folderId;
+    group.appendChild(heading);
 
     byFolder[folderId].forEach((m) => {
       const card = document.createElement("div");
       card.className = "card";
 
       const title = document.createElement("h4");
-      title.textContent = m.name || "(No name)";
+      title.textContent = m.name;
 
       const link = document.createElement("a");
       link.href = m.url;
       link.target = "_blank";
-      link.rel = "noopener noreferrer";
       link.textContent = m.url;
 
       const tags = document.createElement("div");
@@ -575,36 +559,31 @@ async function loadMedia() {
         tags.appendChild(span);
       });
 
-      const delBtn = document.createElement("button");
-      delBtn.textContent = "Delete";
-      delBtn.className = "smallBtn";
-      delBtn.addEventListener("click", () => deleteMedia(m.id));
+      const del = document.createElement("button");
+      del.className = "smallBtn";
+      del.textContent = "Delete";
+      del.addEventListener("click", () => deleteMedia(m.id));
 
       card.appendChild(title);
       card.appendChild(link);
       card.appendChild(tags);
-      card.appendChild(delBtn);
-      groupDiv.appendChild(card);
+      card.appendChild(del);
+      group.appendChild(card);
     });
 
-    mediaList.appendChild(groupDiv);
+    mediaList.appendChild(group);
   });
 }
 
 async function addMedia() {
-  if (!currentPBCode) return;
   const name = mediaNameInput.value.trim();
   const url = mediaURLInput.value.trim();
   const folderId = mediaFolderSelect.value || "";
   const tags = getSelectedTags(mediaTagSelector);
 
-  if (!name || !url) {
-    alert("Enter a name and URL.");
-    return;
-  }
+  if (!name || !url) return alert("Enter a name and URL.");
 
-  const mediaRef = collection(db, `practicebases/${currentPBCode}/media`);
-  await addDoc(mediaRef, {
+  await addDoc(collection(db, `practicebases/${currentPBCode}/media`), {
     name,
     url,
     folderId,
@@ -619,37 +598,65 @@ async function addMedia() {
 }
 
 async function deleteMedia(id) {
-  if (!currentPBCode) return;
   if (!confirm("Delete this media item?")) return;
-
-  const mediaRef = doc(db, `practicebases/${currentPBCode}/media/${id}`);
-  await deleteDoc(mediaRef);
+  await deleteDoc(doc(db, `practicebases/${currentPBCode}/media/${id}`));
   await loadMedia();
 }
 
-// ------------------------------
-// SETTINGS
-// ------------------------------
+/* ---------------------------------------------------
+   SETTINGS
+--------------------------------------------------- */
 async function deletePracticeBase() {
-  if (!currentPBCode) return;
-  alert(
-    "Full PB deletion (with all subcollections) needs a backend/Cloud Function. This button is a placeholder."
+  const confirmDelete = confirm(
+    "This will permanently delete ALL announcements, schedule items, tags, media, folders, and users for this PracticeBase.\n\nThis cannot be undone.\n\nAre you sure?"
   );
+
+  if (!confirmDelete) return;
+
+  // Delete subcollections manually (Firestore has no recursive delete in rules)
+  const collections = [
+    "announcements",
+    "schedule",
+    "tags",
+    "media",
+    "mediaFolders",
+    "users"
+  ];
+
+  for (const col of collections) {
+    const colRef = collection(db, `practicebases/${currentPBCode}/${col}`);
+    const snap = await getDocs(colRef);
+    for (const docSnap of snap.docs) {
+      await deleteDoc(docSnap.ref);
+    }
+  }
+
+  // Delete PB root doc
+  await deleteDoc(doc(db, `practicebases/${currentPBCode}`));
+
+  alert("PracticeBase deleted.");
+  window.location.reload();
 }
 
-// ------------------------------
-// EVENT HANDLERS
-// ------------------------------
+/* ---------------------------------------------------
+   EVENT HANDLERS
+--------------------------------------------------- */
 function attachEventHandlers() {
-  pbSelect.addEventListener("change", async () => {
-    currentPBCode = pbSelect.value;
-    await loadAllForPB();
-  });
-
   addTagBtn.addEventListener("click", addTag);
   addFolderBtn.addEventListener("click", addFolder);
   addAnnouncementBtn.addEventListener("click", addAnnouncement);
   addScheduleBtn.addEventListener("click", addSchedule);
   addMediaBtn.addEventListener("click", addMedia);
   deletePBBtn.addEventListener("click", deletePracticeBase);
+}
+
+/* ---------------------------------------------------
+   LOGOUT (optional)
+--------------------------------------------------- */
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "/auth/login";
+  });
 }
